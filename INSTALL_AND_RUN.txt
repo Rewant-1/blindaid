@@ -1,0 +1,213 @@
+===============================================================================
+  FACE RECOGNITION SYSTEM v2.0 - INSTALLATION & FIRST RUN GUIDE
+===============================================================================
+
+PROJECT LOCATION: c:\sec-project
+
+===============================================================================
+STEP 1: ACTIVATE VIRTUAL ENVIRONMENT
+===============================================================================
+
+Open PowerShell and run:
+
+    cd c:\sec-project
+    .venv\Scripts\activate
+
+You should see (.venv) at the start of your prompt.
+
+===============================================================================
+STEP 2: INSTALL DEPENDENCIES (First Time Only)
+===============================================================================
+
+Install required packages:
+
+    pip install -r requirements.txt
+
+This may take 5-15 minutes as dlib compiles from source.
+
+If dlib fails to install:
+  1. Install Visual Studio Build Tools from:
+     https://visualstudio.microsoft.com/downloads/
+  2. Or install cmake: pip install cmake
+  3. Then retry: pip install dlib
+
+===============================================================================
+STEP 3: VERIFY INSTALLATION
+===============================================================================
+
+Test that everything is installed:
+
+    python facerecognizer.py --help
+
+You should see the help message with all options.
+
+===============================================================================
+STEP 4: SETUP YOUR FACE DATABASE
+===============================================================================
+
+Your known_faces directory structure should look like:
+
+    known_faces/
+    ├── person1/
+    │   ├── photo1.jpg
+    │   ├── photo2.jpg
+    │   └── photo3.jpg
+    ├── person2/
+    │   └── photo1.jpg
+    └── person3/
+        └── photo1.jpg
+
+Tips:
+  - Use clear, front-facing photos
+  - Good lighting
+  - One face per photo
+  - 2-5 photos per person recommended
+
+===============================================================================
+STEP 5: RUN THE SYSTEM
+===============================================================================
+
+Basic run:
+
+    python facerecognizer.py
+
+Advanced options:
+
+    # High performance mode (recommended for laptops)
+    python facerecognizer.py --scale 0.2 --process-every 3
+
+    # High accuracy mode
+    python facerecognizer.py --scale 0.5 --threshold 0.4
+
+    # Debug mode (verbose logging)
+    python facerecognizer.py --debug
+
+    # Use different camera
+    python facerecognizer.py --camera 1
+
+    # Custom configuration
+    python facerecognizer.py --known-faces "C:\MyFaces" --debounce 10
+
+===============================================================================
+CONTROLS
+===============================================================================
+
+    Q       - Quit the application
+    Ctrl+C  - Stop (alternative)
+
+===============================================================================
+WHAT YOU'LL SEE
+===============================================================================
+
+✓ Video window with:
+  - Green boxes around recognized faces (with name, position, confidence)
+  - Red boxes around unknown faces
+  - FPS counter in top-left corner
+
+✓ Audio announcements:
+  - "John is on the left side."
+  - "Jane is on the middle side."
+
+✓ Console logs:
+  - Number of loaded face encodings
+  - Camera resolution
+  - Recognition events
+
+===============================================================================
+TROUBLESHOOTING
+===============================================================================
+
+Problem: "ModuleNotFoundError: No module named 'face_recognition'"
+Solution: Activate virtual environment: .venv\Scripts\activate
+
+Problem: "Camera failed to open"
+Solution: Try different camera: python facerecognizer.py --camera 1
+
+Problem: Low FPS / laggy
+Solution: Use fast mode: python facerecognizer.py --scale 0.2 --process-every 3
+
+Problem: Not recognizing faces
+Solution: 
+  1. Add more/better photos to known_faces/
+  2. Lower threshold: python facerecognizer.py --threshold 0.4
+  3. Increase quality: python facerecognizer.py --scale 0.5 --process-every 1
+
+Problem: False recognitions
+Solution: Increase threshold: python facerecognizer.py --threshold 0.6
+
+Problem: No audio
+Solution: Test pyttsx3:
+  python -c "import pyttsx3; e=pyttsx3.init(); e.say('test'); e.runAndWait()"
+
+===============================================================================
+COMMAND-LINE OPTIONS REFERENCE
+===============================================================================
+
+--known-faces PATH      Path to known faces directory (default: known_faces)
+--camera INDEX          Camera device index (default: 0)
+--debounce SECONDS      Seconds between announcements (default: 15.0)
+--scale FACTOR          Frame scale 0.1-1.0 (default: 0.25, smaller=faster)
+--process-every N       Process every Nth frame (default: 2, higher=faster)
+--threshold VALUE       Match threshold 0.0-1.0 (default: 0.5, lower=stricter)
+--model hog|cnn         Detection model (default: hog=faster, cnn=accurate)
+--debug                 Enable debug logging
+
+===============================================================================
+PERFORMANCE TUNING
+===============================================================================
+
+FAST MODE (Low-end laptop):
+    python facerecognizer.py --scale 0.2 --process-every 3
+
+BALANCED MODE (Default - recommended):
+    python facerecognizer.py
+
+QUALITY MODE (Good CPU/GPU):
+    python facerecognizer.py --scale 0.5 --process-every 1 --threshold 0.4
+
+MAXIMUM QUALITY (Powerful system):
+    python facerecognizer.py --scale 0.5 --process-every 1 --model cnn
+
+===============================================================================
+DOCUMENTATION FILES
+===============================================================================
+
+README.md                  - Complete documentation (300+ lines)
+QUICKSTART.md              - 5-minute getting started guide
+CHANGELOG.md               - Version history and improvements
+IMPLEMENTATION_SUMMARY.md  - All implemented features
+config.py                  - Configuration defaults
+
+===============================================================================
+FIRST RUN CHECKLIST
+===============================================================================
+
+[ ] Virtual environment activated (.venv)
+[ ] Dependencies installed (pip install -r requirements.txt)
+[ ] Help command works (python facerecognizer.py --help)
+[ ] At least one person folder in known_faces/
+[ ] Photos are clear and front-facing
+[ ] Camera is connected
+[ ] Ready to run: python facerecognizer.py
+
+===============================================================================
+QUICK START COMMANDS
+===============================================================================
+
+# Activate environment
+.venv\Scripts\activate
+
+# Install dependencies (first time)
+pip install -r requirements.txt
+
+# Run the system
+python facerecognizer.py
+
+# Show all options
+python facerecognizer.py --help
+
+===============================================================================
+
+Made with ❤️ | Version 2.0.0 | Production Ready | November 3, 2025
+
+===============================================================================

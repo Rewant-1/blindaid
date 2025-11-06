@@ -1,0 +1,26 @@
+# Face Recognition System - Python Dependencies
+# Install with: pip install -r requirements.txt
+
+# Core face recognition
+face_recognition>=1.3.0
+dlib>=19.22.0
+
+# Computer vision
+opencv-python>=4.8.0
+
+# YOLO for person detection
+ultralytics>=8.0.0
+
+# Numerical processing
+numpy>=1.24.0
+
+# Text-to-speech (offline, cross-platform)
+pyttsx3>=2.90
+
+# Optional: For better TTS voice quality on Windows
+# pywin32>=305  # Uncomment for Windows SAPI5 voices
+
+# Development dependencies (optional)
+# pytest>=7.4.0
+# black>=23.0.0
+# flake8>=6.0.0
