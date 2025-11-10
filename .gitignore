@@ -16,17 +16,22 @@ parts/
 sdist/
 var/
 wheels/
+pip-wheel-metadata/
+share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+MANIFEST
 
-# Virtual Environment
-.venv/
+# Virtual environments
 venv/
-ENV/
 env/
+ENV/
+env.bak/
+venv.bak/
+.venv/
 
-# IDE
+# IDEs
 .vscode/
 .idea/
 *.swp
@@ -34,28 +39,38 @@ env/
 *~
 .DS_Store
 
-# Backups
-*.backup
-*.bak
-*.old
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb
+
+# Model files (large)
+*.pt
+*.pth
+*.onnx
+*.pb
+*.h5
+*.weights
+
+# Data
+*.csv
+*.json
+*.xml
+*.yaml
+!data.yaml
 
 # Logs
 *.log
-
-# Testing
-.pytest_cache/
-.coverage
-htmlcov/
+logs/
 
 # OS
 Thumbs.db
-Desktop.ini
+.DS_Store
 
 # Project specific
-# Uncomment if you don't want to track known faces in git
-# known_faces/
+resources/known_faces/*/
+!resources/known_faces/.gitkeep
+resources/models/
+!resources/models/.gitkeep
 
-# Temporary files
-*.tmp
-temp/
-tmp/
+# Legacy code (archived, not part of main codebase)
+_legacy/

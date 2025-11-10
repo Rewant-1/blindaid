@@ -1,360 +1,265 @@
-# Face Recognition System
+# BlindAid - Assistive Technology System
 
-Real-time face recognition system with position detection and audio announcements. Built with Python, OpenCV, and face_recognition library.
+A consolidated multi-modal assistive technology system designed to help visually impaired individuals navigate their environment through object detection, text reading (OCR), and face recognition.
 
 ## Features
 
-✨ **Real-time face detection and recognition** from webcam feed  
-📍 **Position detection** (left, middle, right) for each recognized person  
-🔊 **Offline audio announcements** using text-to-speech  
-⚡ **Performance optimizations** with frame scaling and skipping  
-🎛️ **Configurable parameters** via command-line arguments  
-🛡️ **Robust error handling** with comprehensive logging  
-📊 **FPS counter** and confidence metrics  
+### 🕹️ Integrated Controller (New)
 
-## Requirements
+- Single window experience with hotkeys for scene understanding, reading, captions, and depth cues
+- Scene mode merges YOLO object detection with known-face recognition and speech cooldowns
+- On-demand BLIP captioning (`C`) for rich descriptions
+- MiDaS depth summaries (`D`) to approximate how far objects are
 
-- Python 3.7 or higher
-- Webcam/camera device
-- Windows, macOS, or Linux
+### 🎯 Object Detection Mode
 
-## Installation
+- Real-time detection of objects using YOLO
+- Position identification (left/center/right)
+- Audio announcements of detected objects and their locations
+- Customizable confidence thresholds
 
-### 1. Install Visual Studio Build Tools (Windows Only)
+### 📖 OCR Mode
 
-`dlib` requires C++ build tools on Windows. Download and install:
-- [Visual Studio Build Tools](https://visualstudio.microsoft.com/downloads/)
-- During installation, select "Desktop development with C++"
+- Real-time text recognition using PaddleOCR
+- Text-to-speech for reading detected text
+- High-confidence filtering for accurate readings
+- Visual bounding boxes around detected text
 
-Alternatively, install CMake:
-```powershell
-# Using Chocolatey
-choco install cmake
+### 👤 Face Recognition Mode
 
-# Or download from https://cmake.org/download/
-```
+- Real-time face detection and recognition
+- Position detection (left/middle/right)
+- Audio announcements with person identification
+- Support for custom face databases
+- Optimized performance with YOLO-based face detection
 
-### 2. Create Virtual Environment (Recommended)
+## Quick Start
 
-```powershell
-# Create virtual environment
-python -m venv .venv
+### Installation
 
-# Activate on Windows
-.venv\Scripts\activate
+1. **Install Python dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-# Activate on macOS/Linux
-source .venv/bin/activate
-```
+2. **Set up resources:**
+   - Copy YOLO object detection model to: `resources/models/object_blind_aide.pt`
+   - Copy YOLO face detection model to: `resources/models/yolov9t-face-lindevs.pt`
+   - Copy known faces to: `resources/known_faces/<person_name>/*.jpg`
 
-### 3. Install Dependencies
+### Running the System
 
-```powershell
-pip install -r requirements.txt
-```
+#### Integrated Controller (Recommended)
 
-**Note:** Installing `dlib` and `face_recognition` may take several minutes as dlib compiles from source.
-
-#### Troubleshooting Installation
-
-**If dlib installation fails on Windows:**
-```powershell
-# Option 1: Install pre-built wheel
-pip install https://github.com/jloh02/dlib/releases/download/v19.22/dlib-19.22.0-cp311-cp311-win_amd64.whl
-
-# Option 2: Use conda (if you have Anaconda/Miniconda)
-conda install -c conda-forge dlib
-```
-
-**If face_recognition installation fails:**
-```powershell
-pip install cmake
-pip install dlib
-pip install face_recognition
-```
-
-## Setup
-
-### 1. Organize Known Faces
-
-Create a directory structure like this:
-```
-known_faces/
-├── person1/
-│   ├── photo1.jpg
-│   ├── photo2.jpg
-│   └── photo3.jpg
-├── person2/
-│   ├── photo1.jpg
-│   └── photo2.jpg
-└── person3/
-    └── photo1.jpg
-```
-
-**Tips for best results:**
-- Use clear, front-facing photos
-- Good lighting conditions
-- One face per photo
-- Multiple photos per person improves accuracy
-- Supported formats: JPG, PNG, BMP
-
-### 2. Test Your Camera
-
-```powershell
-python -c "import cv2; cap = cv2.VideoCapture(0); print('Camera OK' if cap.isOpened() else 'Camera FAILED'); cap.release()"
-```
-
-## Usage
-
-### Basic Usage
-
-```powershell
-# Run with default settings
-python facerecognizer.py
-```
-
-Press `q` to quit the application.
-
-### Command-Line Options
-
-```powershell
-python facerecognizer.py --help
-```
-
-#### Available Arguments
-
-| Argument | Type | Default | Description |
-|----------|------|---------|-------------|
-| `--known-faces` | str | `known_faces` | Path to directory containing known faces |
-| `--camera` | int | `0` | Camera device index (0 for default camera) |
-| `--debounce` | float | `15.0` | Seconds between repeated announcements for same person |
-| `--scale` | float | `0.25` | Frame scale factor for processing (smaller = faster) |
-| `--process-every` | int | `2` | Process every Nth frame (higher = faster, lower quality) |
-| `--threshold` | float | `0.5` | Face match threshold 0.0-1.0 (lower = stricter matching) |
-| `--model` | str | `hog` | Detection model: `hog` (faster) or `cnn` (accurate, needs GPU) |
-| `--debug` | flag | `False` | Enable debug logging |
-
-### Usage Examples
-
-**High performance mode (recommended for most laptops):**
-```powershell
-python facerecognizer.py --scale 0.2 --process-every 3 --model hog
-```
-
-**High accuracy mode (requires good CPU/GPU):**
-```powershell
-python facerecognizer.py --scale 0.5 --process-every 1 --threshold 0.4
-```
-
-**Use CNN model (requires GPU for real-time):**
-```powershell
-python facerecognizer.py --model cnn --process-every 1
-```
-
-**Multiple cameras (use camera 1 instead of default):**
-```powershell
-python facerecognizer.py --camera 1
-```
-
-**Custom known faces directory:**
-```powershell
-python facerecognizer.py --known-faces "C:\MyFaces" --threshold 0.4
-```
-
-**Debug mode with verbose logging:**
-```powershell
-python facerecognizer.py --debug
-```
-
-## Configuration Tuning
-
-### Performance vs Accuracy Trade-offs
-
-| Setting | Fast/Low CPU | Balanced | Accurate/High CPU |
-|---------|--------------|----------|-------------------|
-| `--scale` | 0.2 | 0.25 | 0.5 |
-| `--process-every` | 3 | 2 | 1 |
-| `--model` | hog | hog | cnn |
-
-### Threshold Tuning
-
-- **0.3-0.4**: Very strict, fewer false positives, may miss some matches
-- **0.5**: Default, balanced
-- **0.6-0.7**: Lenient, more matches but higher false positive rate
-
-Test with your specific dataset and adjust accordingly.
-
-## How It Works
-
-1. **Face Detection**: Detects faces in video frames using HOG or CNN model
-2. **Face Encoding**: Generates 128-dimensional face encodings
-3. **Face Recognition**: Compares encodings with known faces database
-4. **Position Detection**: Determines if person is on left/middle/right of frame
-5. **Audio Announcement**: Speaks person's name and position (with debouncing)
-
-### Performance Optimizations
-
-- **Frame Downscaling**: Processes smaller frames (default 0.25x) for faster detection
-- **Frame Skipping**: Processes every Nth frame (default every 2nd frame)
-- **HOG Model**: Uses histogram of gradients (faster than CNN)
-- **Threaded Audio**: Audio playback in background thread doesn't block video
-
-## Troubleshooting
-
-### Camera Issues
-
-**Camera not opening:**
-```powershell
-# Try different camera index
-python facerecognizer.py --camera 1
-
-# Check available cameras
-python -c "import cv2; [print(f'Camera {i}: {cv2.VideoCapture(i).isOpened()}') for i in range(5)]"
-```
-
-### Recognition Issues
-
-**Low accuracy / not recognizing faces:**
-- Add more photos per person (3-5 recommended)
-- Use better quality photos (good lighting, clear faces)
-- Lower threshold: `--threshold 0.4`
-- Increase processing: `--scale 0.5 --process-every 1`
-
-**False positives (wrong person recognized):**
-- Increase threshold: `--threshold 0.6`
-- Use stricter model settings
-- Ensure known faces photos are distinct
-
-### Performance Issues
-
-**Low FPS / laggy video:**
-- Decrease scale: `--scale 0.2`
-- Increase frame skip: `--process-every 3`
-- Use HOG model: `--model hog`
-- Close other applications
-
-**High CPU usage:**
-- Default settings are optimized for balance
-- Try: `--scale 0.2 --process-every 3`
-
-### Audio Issues
-
-**No audio / TTS not working:**
-```powershell
-# Test pyttsx3
-python -c "import pyttsx3; engine = pyttsx3.init(); engine.say('Test'); engine.runAndWait()"
-```
-
-**On Windows**, pyttsx3 uses SAPI5. If issues occur:
-```powershell
-pip install pywin32
-```
-
-**On Linux**, install espeak:
 ```bash
-sudo apt-get install espeak
+python -m blindaid
 ```
 
-**On macOS**, uses built-in NSSpeechSynthesizer (should work out of box).
+##### Hotkeys
 
-### Installation Issues
+- `1`: Scene understanding (objects + faces)
+- `2`: Reading mode (OCR)
+- `C`: Generate a descriptive caption for the current frame
+- `D`: Run depth analysis on the latest scene detections
+- `Q`: Quit the application
 
-**dlib won't install:**
-See "Troubleshooting Installation" section above.
+#### Object Detection Mode
 
-**Import errors:**
-```powershell
-# Ensure virtual environment is activated
-.venv\Scripts\activate
-
-# Reinstall dependencies
-pip install --upgrade -r requirements.txt
+```bash
+python -m blindaid --mode object-detection
 ```
 
-## Development
+##### Controls (Object Detection)
 
-### Project Structure
+- Press `q` to quit
+- Press `s` to manually trigger audio announcement
+
+#### OCR Mode
+
+```bash
+python -m blindaid --mode ocr
+```
+
+##### Controls (OCR)
+
+- Press `q` to quit
+- Press `s` to speak detected text
+- Show text to camera for automatic reading
+
+#### Face Recognition Mode
+
+```bash
+python -m blindaid --mode face
+```
+
+##### Controls (Face)
+
+- Press `q` to quit
+- Automatic announcements when faces are recognized
+
+## Advanced Usage
+
+### Custom Camera
+```bash
+python -m blindaid --mode object-detection --camera 1
+```
+
+### Adjust Confidence Threshold
+```bash
+python -m blindaid --mode object-detection --confidence 0.7
+```
+
+### Disable Audio
+```bash
+python -m blindaid --mode ocr --no-audio
+```
+
+### Custom Known Faces Directory
+```bash
+python -m blindaid --mode face --known-faces ./my_faces
+```
+
+### Debug Mode
+```bash
+python -m blindaid --mode face --debug
+```
+
+## Project Structure
 
 ```
 sec-project/
-├── facerecognizer.py      # Main application
-├── requirements.txt        # Python dependencies
-├── README.md              # This file
-├── known_faces/           # Known faces database
-│   ├── person1/
-│   └── person2/
-└── .venv/                 # Virtual environment (created)
+├── blindaid/                    # Main application package
+│   ├── __init__.py
+│   ├── __main__.py             # Package entry point
+│   ├── app.py                  # CLI application
+│   ├── core/                   # Shared utilities
+│   │   ├── config.py           # Configuration
+│   │   ├── audio.py            # Audio/TTS utilities
+│   │   └── base_mode.py        # Base class for modes
+│   └── modes/                  # Mode implementations
+│       ├── object_detection/
+│       │   └── detector.py     # Object detection service
+│       ├── ocr/
+│       │   └── reader.py       # OCR service
+│       └── face_recognition/
+│           └── recognizer.py   # Face recognition service
+├── resources/                   # Models and data
+│   ├── models/                 # YOLO models
+│   └── known_faces/            # Face database
+└── requirements.txt            # Dependencies
+
+Legacy directories (reference only):
+├── Blind_aide_specs/           # Original object detection code
+└── sec-1/                      # Original face recognition code
 ```
 
-### Logging
+## Demo Instructions for Professor
 
-View detailed logs:
-```powershell
-python facerecognizer.py --debug
+### Preparation
+1. Ensure camera is connected and working
+2. Install all dependencies: `pip install -r requirements.txt`
+3. Copy models to `resources/models/` directory
+4. Add at least 2-3 known faces to `resources/known_faces/`
+
+### Demonstration Sequence
+
+#### 1. Object Detection Demo (2-3 minutes)
+```bash
+python -m blindaid --mode object-detection
 ```
+- Show common objects (pen, book, bag, bottle)
+- Move objects to different positions (left/center/right)
+- Demonstrate audio announcements
+- Press 's' to manually trigger announcements
 
-Logs include:
-- Loaded faces count
-- Camera resolution
-- FPS counter
-- Recognition events
-- Configuration settings
+#### 2. OCR Demo (2-3 minutes)
+```bash
+python -m blindaid --mode ocr
+```
+- Show printed text (book cover, document, sign)
+- Demonstrate automatic text reading
+- Show confidence-based filtering with low-quality text
+- Press 's' for manual reading
 
-### Extending the System
+#### 3. Face Recognition Demo (2-3 minutes)
+```bash
+python -m blindaid --mode face
+```
+- Show registered faces and their recognition
+- Demonstrate position detection (left/middle/right)
+- Show "Unknown" detection for unregistered faces
+- Audio announcements with names and positions
 
-The code is structured with classes for easy extension:
-- `AudioPlayer`: Handles TTS audio playback
-- `FaceRecognizer`: Main recognition logic
+#### 4. Integrated Scene Demo (Optional bonus)
+```bash
+python -m blindaid
+```
+- Toggle between scene (`1`) and reading (`2`) modes in real time
+- Trigger caption (`C`) for descriptions and depth (`D`) for distance hints
+- Highlight combined speech feedback for people and objects
 
-You can modify:
-- Audio messages in `run()` method
-- Position detection logic in `_get_position()`
-- Recognition threshold in arguments
-- Add new features (e.g., save snapshots, database logging)
+### Tips for Successful Demo
+- Good lighting is essential
+- Keep objects/text/faces at reasonable distance (1-3 feet)
+- Ensure camera is stable
+- Test each mode before the demo
+- Have backup objects/text samples ready
 
-## Performance Benchmarks
+## Troubleshooting
 
-Typical performance on different systems:
+### Camera not opening
+- Check camera index with `--camera 0` or `--camera 1`
+- Ensure no other application is using the camera
 
-| System | Settings | FPS | Notes |
-|--------|----------|-----|-------|
-| Gaming Laptop (RTX 3060) | Default | 25-30 | Smooth |
-| Modern Laptop (i7) | Default | 15-20 | Good |
-| Older Laptop (i5) | Fast mode | 10-15 | Usable |
-| Raspberry Pi 4 | Fast + HOG | 5-8 | Limited |
+### Models not found
+- Verify model paths in `resources/models/`
+- Check file names match configuration in `core/config.py`
 
-## Security & Privacy
+### Audio not working
+- Check system audio settings
+- Try `--no-audio` flag to run without audio
+- For OCR, ensure internet connection (uses gTTS)
 
-⚠️ **Important Notes:**
-- Face data is stored locally only
-- No network connectivity required (offline TTS)
-- No data is sent to external services
-- Known faces images remain in your `known_faces/` directory
+### Poor detection accuracy
+- Improve lighting conditions
+- Adjust `--confidence` threshold
+- Move closer to camera
+- Ensure camera is focused
+
+## Configuration
+
+All default configurations are in `blindaid/core/config.py`. You can modify:
+- Model paths
+- Confidence thresholds
+- Camera settings
+- Audio settings
+- Performance parameters
+
+## Requirements
+
+- Python 3.8+
+- Webcam
+- Windows/Linux/MacOS
+- Internet connection (for OCR audio only)
+
+## Future Enhancements
+
+- [ ] Multi-modal pipeline (combine detection + OCR)
+- [ ] Depth sensing for distance estimation
+- [ ] Obstacle detection and warnings
+- [ ] Gesture recognition
+- [ ] Mobile app integration
+- [ ] Cloud synchronization for face database
 
 ## License
 
-This project uses the following open-source libraries:
-- `face_recognition` - MIT License
-- `dlib` - Boost Software License
-- `OpenCV` - Apache 2.0 License
-- `pyttsx3` - MPL 2.0 License
+Educational project for assistive technology demonstration.
 
 ## Credits
 
-Built with:
-- [face_recognition](https://github.com/ageitgey/face_recognition) by Adam Geitgey
-- [dlib](http://dlib.net/) by Davis King
-- [OpenCV](https://opencv.org/)
-- [pyttsx3](https://github.com/nateshmbhat/pyttsx3)
-
-## Support
-
-For issues or questions:
-1. Check troubleshooting section above
-2. Verify all dependencies are installed correctly
-3. Test with `--debug` flag for detailed logs
-4. Ensure camera and known faces are properly configured
-
----
-
-**Made with ❤️ for real-time face recognition**
+Developed using:
+- YOLOv8/v9 for object and face detection
+- PaddleOCR for text recognition
+- face_recognition library
+- OpenCV for computer vision
+- pyttsx3/gTTS for text-to-speech

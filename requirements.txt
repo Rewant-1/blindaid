@@ -1,26 +1,43 @@
-# Face Recognition System - Python Dependencies
-# Install with: pip install -r requirements.txt
+# BlindAid - Unified Assistive Technology System
+# ===============================================
+# Complete requirements for integrated controller with all modes
 
-# Core face recognition
-face_recognition>=1.3.0
-dlib>=19.22.0
-
-# Computer vision
+# Core dependencies
+numpy>=1.24.0
 opencv-python>=4.8.0
+Pillow>=10.0.0
 
-# YOLO for person detection
+# YOLO models for object and face detection
 ultralytics>=8.0.0
 
-# Numerical processing
-numpy>=1.24.0
+# OCR engines
+paddleocr>=2.7.0
+paddlepaddle>=2.5.0
+easyocr>=1.7.0
 
-# Text-to-speech (offline, cross-platform)
+# Face recognition
+face-recognition>=1.3.0
+dlib>=19.22.0
+
+# AI models for captioning and depth
+torch>=2.0.0
+torchvision>=0.15.0
+transformers>=4.30.0
+
+# Text-to-Speech
 pyttsx3>=2.90
+gTTS>=2.3.0
+pygame>=2.5.0
 
-# Optional: For better TTS voice quality on Windows
-# pywin32>=305  # Uncomment for Windows SAPI5 voices
+# Optional: Better TTS on Windows
+# pywin32>=305
 
-# Development dependencies (optional)
+# Utilities
+matplotlib>=3.7.0
+pandas>=2.0.0
+ipython>=8.0.0
+
+# Development (optional)
 # pytest>=7.4.0
 # black>=23.0.0
 # flake8>=6.0.0
