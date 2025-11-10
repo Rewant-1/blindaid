@@ -25,7 +25,7 @@ class ReadingMode:
             lang=language,
             use_textline_orientation=True,
             text_det_limit_side_len=640,
-            show_log=False,
+            use_angle_cls=True,
         )
         logger.info("PaddleOCR ready")
 
