@@ -23,9 +23,8 @@ class ReadingMode:
         logger.info("Initializing PaddleOCR for reading mode")
         self.ocr = PaddleOCR(
             lang=language,
-            use_textline_orientation=True,
-            text_det_limit_side_len=640,
             use_angle_cls=True,
+            text_det_limit_side_len=640,
         )
         logger.info("PaddleOCR ready")
 
