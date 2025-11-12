@@ -237,10 +237,17 @@ All default configurations are in `blindaid/core/config.py`. You can modify:
 
 ## Requirements
 
+### Desktop/Laptop
 - Python 3.8+
 - Webcam
 - Windows/Linux/MacOS
-- Internet connection (for OCR audio only)
+- 4GB+ RAM recommended
+- Internet connection (for gTTS audio)
+
+### Raspberry Pi
+- Raspberry Pi 5 (4GB or 8GB)
+- Raspberry Pi Camera Module v2/v3 or USB webcam
+- See **[RASPBERRY_PI.md](RASPBERRY_PI.md)** for complete Pi setup guide
 
 ## Future Enhancements
 
