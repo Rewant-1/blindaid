@@ -61,12 +61,12 @@ resources/
 ```bash
 python -m blindaid --help
 python -m blindaid                 # Integrated controller
-python -m blindaid --mode ocr      # Single mode smoke tests
+python -m blindaid --start-mode reading   # Start directly in OCR mode
 python -m pytest                   # Optional regression tests
 ```
 
-If the CLI opens without stack traces the install is complete. Head over to `README.md` for mode
-specific hotkeys and to `docs/RASPBERRY_PI.md` for ARM optimisation notes.
+If the CLI opens without stack traces the install is complete. Head over to `README.md` for hotkeys
+and to `docs/RASPBERRY_PI.md` for ARM optimisation notes.
 
 ## 6. Helper Scripts
 

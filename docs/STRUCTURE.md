@@ -12,7 +12,6 @@ sec-project/
 │   │   ├── __init__.py
 │   │   ├── config.py             # Centralized configuration
 │   │   ├── audio.py              # Text-to-speech utilities
-│   │   ├── base_mode.py          # Base class for modes
 │   │   ├── caption.py            # BLIP image captioning
 │   │   └── depth.py              # MiDaS depth estimation
 │   │
@@ -23,14 +22,7 @@ sec-project/
 │       │   └── scene_mode.py     # Objects + faces combined
 │       ├── ocr/                  # Text reading
 │       │   ├── __init__.py
-│       │   ├── reader.py         # Legacy OCR service
 │       │   └── reading_mode.py   # Controller-ready OCR
-│       ├── object_detection/     # Object detection (legacy)
-│       │   ├── __init__.py
-│       │   └── detector.py
-│       └── face_recognition/     # Face recognition (legacy)
-│           ├── __init__.py
-│           └── recognizer.py
 │
 ├── resources/                    # Models and data (gitignored)
 │   ├── models/                   # YOLO weights
@@ -74,21 +66,14 @@ sec-project/
 
 ### Entry Points
 
-1. **Integrated Controller** (Recommended):
+- **Integrated Controller (single entry)**
 
-   ```bash
-   python -m blindaid
-   ```
+  ```bash
+  python -m blindaid               # Starts in scene mode
+  python -m blindaid --start-mode reading
+  ```
 
-   - Hotkeys: `1` (Scene), `2` (Reading), `C` (Caption), `D` (Depth), `Q` (Quit)
-
-2. **Legacy Single Modes**:
-
-   ```bash
-   python -m blindaid --mode object-detection
-   python -m blindaid --mode ocr
-   python -m blindaid --mode face
-   ```
+  Hotkeys: `1` (Scene), `2` (Reading), `C` (Caption), `D` (Depth), `S` (repeat), `Q` (Quit)
 
 
 ### Clean Organization

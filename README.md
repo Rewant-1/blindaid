@@ -4,34 +4,30 @@ A consolidated multi-modal assistive technology system designed to help visually
 
 ## Features
 
-### 🕹️ Integrated Controller (New)
+### 🕹️ Integrated Controller
 
-- Single window experience with hotkeys for scene understanding, reading, captions, and depth cues
-- Scene mode merges YOLO object detection with known-face recognition and speech cooldowns
-- On-demand BLIP captioning (`C`) for rich descriptions
-- MiDaS depth summaries (`D`) to approximate how far objects are
+- One entry point (`python -m blindaid`) powers every experience
+- Hotkeys let you toggle modes (`1` Scene, `2` Reading) without restarting
+- Optional caption (`C`) and depth (`D`) overlays spin up only when requested
+- Lazy dependency loading keeps startup fast even on modest hardware
 
-### 🎯 Object Detection Mode
+### 👀 Scene Mode (Objects + Faces)
 
-- Real-time detection of objects using YOLO
-- Position identification (left/center/right)
-- Audio announcements of detected objects and their locations
-- Customizable confidence thresholds
+- YOLO-based object detection fused with the known-faces directory
+- Announces spatial hints (left/center/right) with configurable cooldowns
+- Designed for navigation: salient object summaries + optional depth cues
 
-### 📖 OCR Mode
+### 📖 Reading Mode (OCR)
 
-- Real-time text recognition using PaddleOCR
-- Text-to-speech for reading detected text
-- High-confidence filtering for accurate readings
-- Visual bounding boxes around detected text
+- PaddleOCR pipeline tuned for handheld documents and signage
+- TTS playback for detected text with manual repeat whenever you press `S`
+- Smart filtering to avoid noisy partial detections
 
-### 👤 Face Recognition Mode
+### 🧠 Optional AI Enhancements
 
-- Real-time face detection and recognition
-- Position detection (left/middle/right)
-- Audio announcements with person identification
-- Support for custom face databases
-- Optimized performance with YOLO-based face detection
+- BLIP captioning for natural descriptions (`C`)
+- MiDaS depth estimation for approximate distances (`D`)
+- Both features live behind the `advanced`/`full` extras so lighter installs stay slim
 
 ## Quick Start
 
@@ -64,79 +60,38 @@ A consolidated multi-modal assistive technology system designed to help visually
 python -m blindaid
 ```
 
+Want to land directly in reading mode? Start the controller with a different initial state:
+
+```bash
+python -m blindaid --start-mode reading
+```
+
 ##### Hotkeys
 
 - `1`: Scene understanding (objects + faces)
 - `2`: Reading mode (OCR)
 - `C`: Generate a descriptive caption for the current frame *(requires optional advanced extras)*
 - `D`: Run depth analysis on the latest scene detections *(requires optional advanced extras)*
+- `S`: Manually replay the last spoken message (mode-specific)
 - `Q`: Quit the application
 
-#### Object Detection Mode
+##### Helpful flags
 
 ```bash
-python -m blindaid --mode object-detection
+python -m blindaid --camera 1        # Use a different camera index
+python -m blindaid --no-audio        # Mute TTS output
+python -m blindaid --debug           # Verbose logging
 ```
 
-##### Controls (Object Detection)
-
-- Press `q` to quit
-- Press `s` to manually trigger audio announcement
-
-#### OCR Mode
-
-```bash
-python -m blindaid --mode ocr
-```
-
-##### Controls (OCR)
-
-- Press `q` to quit
-- Press `s` to speak detected text
-- Show text to camera for automatic reading
-
-#### Face Recognition Mode
-
-```bash
-python -m blindaid --mode face
-```
-
-##### Controls (Face)
-
-- Press `q` to quit
-- Automatic announcements when faces are recognized
+Fine-grained thresholds (confidence, cooldowns, etc.) now live in `blindaid/core/config.py` for clarity.
 
 ## Advanced Usage
 
-### Custom Camera
-
-```bash
-python -m blindaid --mode object-detection --camera 1
-```
-
-### Adjust Confidence Threshold
-
-```bash
-python -m blindaid --mode object-detection --confidence 0.7
-```
-
-### Disable Audio
-
-```bash
-python -m blindaid --mode ocr --no-audio
-```
-
-### Custom Known Faces Directory
-
-```bash
-python -m blindaid --mode face --known-faces ./my_faces
-```
-
-### Debug Mode
-
-```bash
-python -m blindaid --mode face --debug
-```
+- **Start modes**: `--start-mode scene|reading` controls the initial screen without removing hotkey toggles.
+- **Camera + audio**: Mix `--camera`, `--no-audio`, and `--debug` flags as shown above to fit your setup.
+- **Confidence + thresholds**: Adjust `OBJECT_CONFIDENCE`, `TEXT_CONFIDENCE`, and cooldown timers inside `blindaid/core/config.py`.
+- **Known faces**: Drop JPEGs into `resources/known_faces/<person_name>/` (no CLI flag needed anymore).
+- **Optional extras**: Install `pip install -e .[advanced]` or `.[full]` to enable caption/depth helpers.
 
 ## Project Structure
 
@@ -149,14 +104,13 @@ sec-project/
 │   ├── core/                   # Shared utilities
 │   │   ├── config.py           # Configuration
 │   │   ├── audio.py            # Audio/TTS utilities
-│   │   └── base_mode.py        # Base class for modes
+│   │   ├── caption.py          # Optional BLIP captions
+│   │   └── depth.py            # Optional MiDaS depth analysis
 │   └── modes/                  # Mode implementations
-│       ├── object_detection/
-│       │   └── detector.py     # Object detection service
-│       ├── ocr/
-│       │   └── reader.py       # OCR service
-│       └── face_recognition/
-│           └── recognizer.py   # Face recognition service
+│       ├── scene/
+│       │   └── scene_mode.py   # Objects + faces combined for ModeController
+│       └── ocr/
+│           └── reading_mode.py # OCR pipeline used by ModeController
 ├── resources/                   # Models and data
 │   ├── models/                 # YOLO models
 │   └── known_faces/            # Face database
@@ -183,48 +137,35 @@ Legacy directories (reference only):
 
 ### Demonstration Sequence
 
-#### 1. Object Detection Demo (2-3 minutes)
+1. **Launch the controller**
 
-```bash
-python -m blindaid --mode object-detection
-```
+   ```bash
+   python -m blindaid
+   ```
 
-- Show common objects (pen, book, bag, bottle)
-- Move objects to different positions (left/center/right)
-- Demonstrate audio announcements
-- Press 's' to manually trigger announcements
+   - Explain that this single window now handles everything.
 
-#### 2. OCR Demo (2-3 minutes)
+2. **Scene walk-through (hotkey `1`)**
+   - Show common objects (pen, book, bag, bottle) and move them left/center/right.
+   - Point out audio announcements combining object labels and relative positions.
+   - Let the system auto-switch between objects and known faces as people enter the frame.
 
-```bash
-python -m blindaid --mode ocr
-```
+3. **Reading showcase (press `2` or start in reading mode)**
 
-- Show printed text (book cover, document, sign)
-- Demonstrate automatic text reading
-- Show confidence-based filtering with low-quality text
-- Press 's' for manual reading
+   ```bash
+   python -m blindaid --start-mode reading
+   ```
 
-#### 3. Face Recognition Demo (2-3 minutes)
+   - Hold a sign/book in front of the camera to trigger OCR.
+   - Demonstrate `S` for manual replay and how noisy text gets filtered.
 
-```bash
-python -m blindaid --mode face
-```
+4. **Face recognition (still in Scene mode)**
+   - Introduce registered faces to highlight greetings and left/middle/right cues.
+   - Show an unregistered face to emphasize "Unknown" handling.
 
-- Show registered faces and their recognition
-- Demonstrate position detection (left/middle/right)
-- Show "Unknown" detection for unregistered faces
-- Audio announcements with names and positions
-
-#### 4. Integrated Scene Demo (Optional bonus)
-
-```bash
-python -m blindaid
-```
-
-- Toggle between scene (`1`) and reading (`2`) modes in real time
-- Trigger caption (`C`) for descriptions and depth (`D`) for distance hints
-- Highlight combined speech feedback for people and objects
+5. **Optional AI extras**
+   - Press `C` for a BLIP caption and `D` for depth summaries (if advanced extras installed).
+   - Describe how these features are opt-in so the controller stays lightweight.
 
 ### Tips for Successful Demo
 

@@ -235,9 +235,8 @@ Edit `blindaid/controller.py` to lazy-load only when needed, or run without thes
 
 ```bash
 # Run without caption/depth (they need PyTorch which is heavy on Pi)
-python -m blindaid --mode object-detection  # Object detection only
-python -m blindaid --mode ocr                # OCR only  
-python -m blindaid --mode face               # Face recognition only
+python -m blindaid --start-mode scene    # Objects + faces only
+python -m blindaid --start-mode reading  # OCR only  
 ```
 
 ### 4. Camera Configuration
@@ -280,8 +279,8 @@ source ~/.bashrc
 cd ~/blindaid
 source venv/bin/activate
 
-# Run object detection only (lightest)
-python -m blindaid --mode object-detection
+# Run scene mode only (lightest)
+python -m blindaid --start-mode scene
 ```
 
 ### Integrated Mode (If System Can Handle It)
@@ -374,7 +373,7 @@ After=network.target
 Type=simple
 User=pi
 WorkingDirectory=/home/pi/blindaid
-ExecStart=/home/pi/blindaid/venv/bin/python -m blindaid --mode object-detection
+ExecStart=/home/pi/blindaid/venv/bin/python -m blindaid --start-mode scene
 Restart=on-failure
 Environment="DISPLAY=:0"
 
