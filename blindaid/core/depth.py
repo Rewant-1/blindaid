@@ -2,12 +2,10 @@
 from __future__ import annotations
 
 import logging
-from typing import List, Tuple
+from typing import List, Tuple, Any
 
 import cv2
 import numpy as np
-import torch
-from transformers import DPTForDepthEstimation, DPTImageProcessor
 
 from blindaid.modes.scene.scene_mode import Detection
 
@@ -18,20 +16,39 @@ class DepthAnalyzer:
     """Provides depth estimation for a frame and detections."""
 
     def __init__(self, device: str | None = None):
-        if device is None:
-            device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.device = device
-        self.processor: DPTImageProcessor | None = None
-        self.model: DPTForDepthEstimation | None = None
+        self.device = device or "cpu"
+        self.processor = None
+        self.model = None
+        self._torch: Any | None = None
 
     def _ensure_loaded(self):
         if self.processor is not None and self.model is not None:
             return
+        try:
+            import torch  # pylint: disable=import-error
+            from transformers import (  # pylint: disable=import-error
+                DPTForDepthEstimation,
+                DPTImageProcessor,
+            )
+        except ImportError as exc:
+            raise RuntimeError(
+                "Depth analysis requires the optional 'advanced' dependencies."
+                " Install them via 'pip install -r requirements.txt' (full extras) or"
+                " 'pip install .[advanced]' before pressing 'D'."
+            ) from exc
+
+        if self.device == "cpu" and torch.cuda.is_available():
+            self.device = "cuda"
+
         logger.info("Loading depth estimation model (%s)", self.device)
-        self.processor = DPTImageProcessor.from_pretrained("Intel/dpt-hybrid-midas")
-        self.model = DPTForDepthEstimation.from_pretrained("Intel/dpt-hybrid-midas")
-        self.model = self.model.to(self.device)
-        self.model.eval()
+        processor = DPTImageProcessor.from_pretrained("Intel/dpt-hybrid-midas")
+        model = DPTForDepthEstimation.from_pretrained("Intel/dpt-hybrid-midas")
+        model = model.to(self.device)
+        model.eval()
+
+        self.processor = processor
+        self.model = model
+        self._torch = torch
         logger.info("Depth estimation model ready")
 
     # ------------------------------------------------------------------
@@ -40,7 +57,8 @@ class DepthAnalyzer:
         assert self.processor is not None and self.model is not None  # For type checkers
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         inputs = self.processor(images=rgb, return_tensors="pt").to(self.device)
-        with torch.no_grad():
+        assert self._torch is not None
+        with self._torch.no_grad():
             outputs = self.model(**inputs)
             pred = outputs.predicted_depth
         depth = pred.squeeze().cpu().numpy()

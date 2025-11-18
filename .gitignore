@@ -74,3 +74,5 @@ resources/models/
 
 # Legacy code (archived, not part of main codebase)
 _legacy/
+
+.pytest_cache/

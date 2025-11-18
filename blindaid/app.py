@@ -1,32 +1,23 @@
 """
 BlindAid - Main Application Entry Point
 ========================================
-A consolidated assistive technology system with multiple modes:
-- Integrated Controller: Unified scene understanding and reading with hotkeys
-- Object Detection: Detect and locate objects in the environment
-- OCR: Read text from images/documents
-- Face Recognition: Recognize people and their positions
+Unified controller that handles both scene exploration and reading assistance.
 
 Usage:
-    python -m blindaid                 # Integrated controller
-    python -m blindaid --mode object-detection
-    python -m blindaid --mode ocr
-    python -m blindaid --mode face
+    python -m blindaid                 # Start in scene mode (default)
+    python -m blindaid --start-mode reading
 """
 import sys
 import argparse
 import logging
 import signal
 from pathlib import Path
+from typing import Sequence, Optional
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from blindaid.core import config
-from blindaid.controller import ModeController
-from blindaid.modes.object_detection.detector import ObjectDetectionService
-from blindaid.modes.ocr.reader import OCRService
-from blindaid.modes.face_recognition.recognizer import FaceRecognitionService
 
 # Logger
 logger = logging.getLogger(__name__)
@@ -50,51 +41,9 @@ def signal_handler(signum, frame):
 
 def run_object_detection(args):
     """Run object detection mode."""
+    from blindaid.modes.object_detection.detector import ObjectDetectionService
+
     logger.info("Starting Object Detection Mode")
-    service = ObjectDetectionService(
-        camera_index=args.camera,
-        model_path=args.model,
-        confidence=args.confidence,
-        audio_enabled=args.audio
-    )
-    service.run()
-
-
-def run_ocr(args):
-    """Run OCR mode."""
-    logger.info("Starting OCR Mode")
-    service = OCRService(
-        camera_index=args.camera,
-        language=args.language,
-        confidence=args.confidence,
-        audio_enabled=args.audio
-    )
-    service.run()
-
-
-def run_face_recognition(args):
-    """Run face recognition mode."""
-    logger.info("Starting Face Recognition Mode")
-    service = FaceRecognitionService(
-        camera_index=args.camera,
-        known_faces_dir=args.known_faces,
-        threshold=args.threshold,
-        audio_enabled=args.audio
-    )
-    service.run()
-
-
-def run_integrated_controller(args):
-    """Run the unified keyboard-controlled controller."""
-    logger.info("Starting Integrated Controller Mode")
-    controller = ModeController(
-        camera_index=args.camera,
-        audio_enabled=args.audio,
-    )
-    controller.run()
-
-
-def parse_arguments():
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(
         description="BlindAid - Assistive Technology System",
@@ -150,7 +99,7 @@ Examples:
     parser.add_argument('--threshold', type=float, default=0.5,
                        help='Face recognition threshold (default: 0.5)')
     
-    return parser.parse_args()
+    return parser.parse_args(argv)
 
 
 def main():

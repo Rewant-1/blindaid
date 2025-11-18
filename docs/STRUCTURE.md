@@ -44,7 +44,7 @@ sec-project/
 │           ├── photo2.jpg
 │           └── photo3.jpg
 │
-├── venv/                         # Virtual environment (gitignored)
+├── .venv/                        # Preferred virtual environment (gitignored)
 │
 ├── _legacy/                      # Archived original implementations
 │   ├── README.md                 # Legacy archive documentation
@@ -53,35 +53,43 @@ sec-project/
 │   └── tasks.md                  # Old task tracking
 │
 ├── .gitignore                    # Git ignore patterns
-├── requirements.txt              # Unified Python dependencies
+├── pyproject.toml                # Packaging + dependency metadata
+├── requirements.txt              # Editable install (full runtime extras)
+├── requirements-dev.txt          # Developer tooling extras
 ├── README.md                     # Main documentation
-├── INSTALL.md                    # Quick setup guide
-├── setup.ps1                     # Windows setup script
-└── setup.sh                      # Linux/Mac setup script
+├── docs/                         # INSTALL / RASPBERRY_PI / STRUCTURE guides
+├── setup.ps1                     # Windows setup helper (optional)
+└── setup.sh                      # Linux/Mac setup helper (optional)
 ```
 
 ## Key Features
 
 ### Unified Structure
+
 - **Single package**: `blindaid/` contains all functionality
-- **Single requirements**: One `requirements.txt` at project root
-- **Single venv**: Virtual environment at project root
+- **Single packaging file**: `pyproject.toml` sources dependencies + extras
+- **Editable install**: `requirements.txt` pins the local editable build with all extras
+- **Single venv**: `.venv/` at project root (ignored by git)
 - **Single resources**: All models and data in `resources/`
 
 ### Entry Points
 
 1. **Integrated Controller** (Recommended):
+
    ```bash
    python -m blindaid
    ```
+
    - Hotkeys: `1` (Scene), `2` (Reading), `C` (Caption), `D` (Depth), `Q` (Quit)
 
 2. **Legacy Single Modes**:
+
    ```bash
    python -m blindaid --mode object-detection
    python -m blindaid --mode ocr
    python -m blindaid --mode face
    ```
+
 
 ### Clean Organization
 
@@ -93,8 +101,9 @@ sec-project/
 ### Migration Complete
 
 All original functionality from scattered directories has been:
+
 - ✅ Consolidated into `blindaid/` package
-- ✅ Unified with single requirements file
+- ✅ Unified with pyproject-driven dependency management
 - ✅ Enhanced with integrated controller
 - ✅ Extended with AI features (captioning, depth)
 - ✅ Properly structured and documented

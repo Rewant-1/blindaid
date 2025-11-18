@@ -37,10 +37,19 @@ A consolidated multi-modal assistive technology system designed to help visually
 
 ### Installation
 
-1. **Install Python dependencies:**
+1. **Create a virtual environment & install dependencies:**
+
    ```bash
+   python -m venv .venv
+   # Windows
+   .venv\\Scripts\\activate
+   # Linux / macOS
+   source .venv/bin/activate
    pip install -r requirements.txt
    ```
+   
+   The requirements file now installs the editable `blindaid` package with every runtime extra.
+   See `docs/INSTALL.md` for uv/pipx alternatives and developer tooling instructions.
 
 2. **Set up resources:**
    - Copy YOLO object detection model to: `resources/models/object_blind_aide.pt`
@@ -59,8 +68,8 @@ python -m blindaid
 
 - `1`: Scene understanding (objects + faces)
 - `2`: Reading mode (OCR)
-- `C`: Generate a descriptive caption for the current frame
-- `D`: Run depth analysis on the latest scene detections
+- `C`: Generate a descriptive caption for the current frame *(requires optional advanced extras)*
+- `D`: Run depth analysis on the latest scene detections *(requires optional advanced extras)*
 - `Q`: Quit the application
 
 #### Object Detection Mode
@@ -100,33 +109,38 @@ python -m blindaid --mode face
 ## Advanced Usage
 
 ### Custom Camera
+
 ```bash
 python -m blindaid --mode object-detection --camera 1
 ```
 
 ### Adjust Confidence Threshold
+
 ```bash
 python -m blindaid --mode object-detection --confidence 0.7
 ```
 
 ### Disable Audio
+
 ```bash
 python -m blindaid --mode ocr --no-audio
 ```
 
 ### Custom Known Faces Directory
+
 ```bash
 python -m blindaid --mode face --known-faces ./my_faces
 ```
 
 ### Debug Mode
+
 ```bash
 python -m blindaid --mode face --debug
 ```
 
 ## Project Structure
 
-```
+```text
 sec-project/
 ├── blindaid/                    # Main application package
 │   ├── __init__.py
@@ -146,7 +160,12 @@ sec-project/
 ├── resources/                   # Models and data
 │   ├── models/                 # YOLO models
 │   └── known_faces/            # Face database
-└── requirements.txt            # Dependencies
+├── pyproject.toml              # Packaging + dependency metadata
+├── requirements.txt            # Editable install (full runtime extras)
+├── requirements-dev.txt        # Developer tooling (ruff, pytest, mypy)
+├── Makefile                    # Helper targets (setup, lint, test)
+├── docs/                       # Install, structure, and Raspberry Pi guides
+├── .venv/                      # Local virtual environment (gitignored)
 
 Legacy directories (reference only):
 ├── Blind_aide_specs/           # Original object detection code
@@ -156,6 +175,7 @@ Legacy directories (reference only):
 ## Demo Instructions for Professor
 
 ### Preparation
+
 1. Ensure camera is connected and working
 2. Install all dependencies: `pip install -r requirements.txt`
 3. Copy models to `resources/models/` directory
@@ -164,41 +184,50 @@ Legacy directories (reference only):
 ### Demonstration Sequence
 
 #### 1. Object Detection Demo (2-3 minutes)
+
 ```bash
 python -m blindaid --mode object-detection
 ```
+
 - Show common objects (pen, book, bag, bottle)
 - Move objects to different positions (left/center/right)
 - Demonstrate audio announcements
 - Press 's' to manually trigger announcements
 
 #### 2. OCR Demo (2-3 minutes)
+
 ```bash
 python -m blindaid --mode ocr
 ```
+
 - Show printed text (book cover, document, sign)
 - Demonstrate automatic text reading
 - Show confidence-based filtering with low-quality text
 - Press 's' for manual reading
 
 #### 3. Face Recognition Demo (2-3 minutes)
+
 ```bash
 python -m blindaid --mode face
 ```
+
 - Show registered faces and their recognition
 - Demonstrate position detection (left/middle/right)
 - Show "Unknown" detection for unregistered faces
 - Audio announcements with names and positions
 
 #### 4. Integrated Scene Demo (Optional bonus)
+
 ```bash
 python -m blindaid
 ```
+
 - Toggle between scene (`1`) and reading (`2`) modes in real time
 - Trigger caption (`C`) for descriptions and depth (`D`) for distance hints
 - Highlight combined speech feedback for people and objects
 
 ### Tips for Successful Demo
+
 - Good lighting is essential
 - Keep objects/text/faces at reasonable distance (1-3 feet)
 - Ensure camera is stable
@@ -208,19 +237,23 @@ python -m blindaid
 ## Troubleshooting
 
 ### Camera not opening
+
 - Check camera index with `--camera 0` or `--camera 1`
 - Ensure no other application is using the camera
 
 ### Models not found
+
 - Verify model paths in `resources/models/`
 - Check file names match configuration in `core/config.py`
 
 ### Audio not working
+
 - Check system audio settings
 - Try `--no-audio` flag to run without audio
 - For OCR, ensure internet connection (uses gTTS)
 
 ### Poor detection accuracy
+
 - Improve lighting conditions
 - Adjust `--confidence` threshold
 - Move closer to camera
@@ -229,6 +262,7 @@ python -m blindaid
 ## Configuration
 
 All default configurations are in `blindaid/core/config.py`. You can modify:
+
 - Model paths
 - Confidence thresholds
 - Camera settings
@@ -238,16 +272,18 @@ All default configurations are in `blindaid/core/config.py`. You can modify:
 ## Requirements
 
 ### Desktop/Laptop
-- Python 3.8+
+
+- Python 3.9+
 - Webcam
 - Windows/Linux/MacOS
 - 4GB+ RAM recommended
 - Internet connection (for gTTS audio)
 
 ### Raspberry Pi
+
 - Raspberry Pi 5 (4GB or 8GB)
 - Raspberry Pi Camera Module v2/v3 or USB webcam
-- See **[RASPBERRY_PI.md](RASPBERRY_PI.md)** for complete Pi setup guide
+- See **[docs/RASPBERRY_PI.md](docs/RASPBERRY_PI.md)** for complete Pi setup guide
 
 ## Future Enhancements
 
@@ -265,6 +301,7 @@ Educational project for assistive technology demonstration.
 ## Credits
 
 Developed using:
+
 - YOLOv8/v9 for object and face detection
 - PaddleOCR for text recognition
 - face_recognition library

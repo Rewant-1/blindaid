@@ -32,7 +32,12 @@ class ModeController:
 
 	WINDOW_NAME = "BlindAid"
 
-	def __init__(self, camera_index: Optional[int] = None, audio_enabled: Optional[bool] = None):
+	def __init__(
+		self,
+		camera_index: Optional[int] = None,
+		audio_enabled: Optional[bool] = None,
+		initial_mode: str | None = None,
+	):
 		self.camera_index = camera_index if camera_index is not None else config.DEFAULT_CAMERA_INDEX
 		default_audio = config.AUDIO_ENABLED
 		self.audio_enabled = default_audio if audio_enabled is None else (audio_enabled and default_audio)
@@ -56,7 +61,11 @@ class ModeController:
 			"scene": "Scene",
 			"reading": "Reading",
 		}
-		self.current_mode_key = "scene"
+		requested_mode = (initial_mode or "scene").lower()
+		if requested_mode not in self.modes:
+			logger.warning("Unknown initial mode '%s', defaulting to scene", requested_mode)
+			requested_mode = "scene"
+		self.current_mode_key = requested_mode
 
 		self.caption_generator: Optional[CaptionGenerator] = None
 		self.depth_analyzer: Optional[DepthAnalyzer] = None
@@ -152,6 +161,9 @@ class ModeController:
 				logger.info("Caption: %s", caption)
 			else:
 				self._add_overlay("Caption: (no description)", duration=3.0)
+		except RuntimeError as exc:
+			logger.warning("Caption unavailable: %s", exc)
+			self._add_overlay("Caption requires optional 'advanced' extras", duration=4.0)
 		except Exception as exc:  # noqa: BLE001
 			logger.exception("Caption generation failed: %s", exc)
 			self._add_overlay("Caption error - see logs", duration=3.0)
@@ -178,6 +190,9 @@ class ModeController:
 			self.last_depth_timestamp = time.time()
 			for line in debug_lines:
 				logger.debug("Depth detail: %s", line)
+		except RuntimeError as exc:
+			logger.warning("Depth unavailable: %s", exc)
+			self._add_overlay("Depth requires optional 'advanced' extras", duration=4.0)
 		except Exception as exc:  # noqa: BLE001
 			logger.exception("Depth analysis failed: %s", exc)
 			self._add_overlay("Depth error - see logs", duration=3.0)
