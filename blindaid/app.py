@@ -39,66 +39,45 @@ def signal_handler(signum, frame):
     sys.exit(0)
 
 
-def run_object_detection(args):
-    """Run object detection mode."""
-    from blindaid.modes.object_detection.detector import ObjectDetectionService
-
-    logger.info("Starting Object Detection Mode")
+def parse_arguments(argv: Optional[Sequence[str]] = None):
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(
         description="BlindAid - Assistive Technology System",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-    # Run integrated controller (default)
+    # Start in scene mode (default)
     python -m blindaid
 
-  # Run object detection mode
-  python -m blindaid --mode object-detection
-  
-  # Run OCR mode with higher confidence
-  python -m blindaid --mode ocr --confidence 0.95
-  
-  # Run face recognition mode with custom directory
-  python -m blindaid --mode face --known-faces ./my_faces
-  
-  # Disable audio feedback
-  python -m blindaid --mode object-detection --no-audio
-  
-  # Use different camera
-  python -m blindaid --mode face --camera 1
+    # Start in reading mode
+    python -m blindaid --start-mode reading
+
+    # Use a different camera with audio disabled
+    python -m blindaid --camera 1 --no-audio
         """
     )
-    
-    # Required arguments
-    parser.add_argument('--mode', type=str, default='integrated',
-                       choices=['integrated', 'object-detection', 'ocr', 'face'],
-                       help='Mode to run: integrated (default), object-detection, ocr, or face')
-    
-    # Common arguments
-    parser.add_argument('--camera', type=int, default=config.DEFAULT_CAMERA_INDEX,
-                       help=f'Camera device index (default: {config.DEFAULT_CAMERA_INDEX})')
-    parser.add_argument('--no-audio', dest='audio', action='store_false',
-                       help='Disable audio feedback')
-    parser.add_argument('--debug', action='store_true',
-                       help='Enable debug logging')
-    
-    # Object detection arguments
-    parser.add_argument('--model', type=str,
-                       help='Path to custom YOLO model (object detection mode)')
-    parser.add_argument('--confidence', type=float, default=0.6,
-                       help='Confidence threshold (default: 0.6)')
-    
-    # OCR arguments
-    parser.add_argument('--language', type=str, default='en',
-                       help='OCR language (default: en)')
-    
-    # Face recognition arguments
-    parser.add_argument('--known-faces', type=str,
-                       help='Path to known faces directory (face recognition mode)')
-    parser.add_argument('--threshold', type=float, default=0.5,
-                       help='Face recognition threshold (default: 0.5)')
-    
+
+    parser.add_argument(
+        "--start-mode",
+        type=str,
+        default="scene",
+        choices=["scene", "reading"],
+        help="Mode to start in (default: scene)",
+    )
+    parser.add_argument(
+        "--camera",
+        type=int,
+        default=config.DEFAULT_CAMERA_INDEX,
+        help=f"Camera device index (default: {config.DEFAULT_CAMERA_INDEX})",
+    )
+    parser.add_argument(
+        "--no-audio",
+        dest="audio",
+        action="store_false",
+        help="Disable audio feedback",
+    )
+    parser.add_argument("--debug", action="store_true", help="Enable debug logging")
+
     return parser.parse_args(argv)
 
 
@@ -113,24 +92,20 @@ def main():
         signal.signal(signal.SIGTERM, signal_handler)
     
     logger.info("="*70)
-    logger.info(f"BlindAid System - {args.mode.upper()} Mode")
+    logger.info("BlindAid System - Integrated Controller")
     logger.info("="*70)
-    
-    # Route to appropriate mode
     try:
-        if args.mode == 'integrated':
-            run_integrated_controller(args)
-        elif args.mode == 'object-detection':
-            run_object_detection(args)
-        elif args.mode == 'ocr':
-            run_ocr(args)
-        elif args.mode == 'face':
-            run_face_recognition(args)
-        else:
-            logger.error(f"Unknown mode: {args.mode}")
-            return 1
-    except Exception as e:
-        logger.exception(f"Fatal error: {e}")
+        # Import controller lazily to avoid heavy deps (cv2) at module import time.
+        from blindaid.controller import ModeController
+
+        controller = ModeController(
+            camera_index=args.camera,
+            audio_enabled=args.audio,
+            initial_mode=args.start_mode,
+        )
+        controller.run()
+    except Exception as e:  # noqa: BLE001
+        logger.exception("Fatal error: %s", e)
         return 1
     
     logger.info("BlindAid System Stopped")

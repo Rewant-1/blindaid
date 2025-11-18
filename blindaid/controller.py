@@ -6,7 +6,15 @@ import time
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Sequence
 
-import cv2
+try:
+	import cv2
+except ModuleNotFoundError as exc:
+	# Provide a friendly runtime hint to the user so app.py can log a clear message
+	raise RuntimeError(
+		"OpenCV is required to run the ModeController. Install it with: 'pip install opencv-python' "
+		"(or 'opencv-python-headless' on headless/ARM platforms), or run 'pip install -e .[full]'. "
+		"See README.md for details."
+	) from exc
 
 from blindaid.core import config
 from blindaid.core.audio import AudioPlayer
