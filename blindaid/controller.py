@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 import time
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Sequence
+from typing import Callable, Dict, List, Optional, Sequence
 
 try:
 	import cv2
@@ -58,19 +58,20 @@ class ModeController:
 				logger.warning("Audio player initialization failed: %s", exc)
 				self.audio_player = None
 
-		self.scene_mode = SceneMode(audio_enabled=self.audio_enabled)
-		self.reading_mode = ReadingMode(audio_enabled=self.audio_enabled, language=config.OCR_LANGUAGE)
-
-		self.modes: Dict[str, object] = {
-			"scene": self.scene_mode,
-			"reading": self.reading_mode,
+		self._mode_factories: Dict[str, Callable[[], object]] = {
+			"scene": lambda: SceneMode(audio_enabled=self.audio_enabled),
+			"reading": lambda: ReadingMode(
+				audio_enabled=self.audio_enabled,
+				language=config.OCR_LANGUAGE,
+			),
 		}
+		self._mode_instances: Dict[str, object] = {}
 		self.mode_labels: Dict[str, str] = {
 			"scene": "Scene",
 			"reading": "Reading",
 		}
 		requested_mode = (initial_mode or "scene").lower()
-		if requested_mode not in self.modes:
+		if requested_mode not in self._mode_factories:
 			logger.warning("Unknown initial mode '%s', defaulting to scene", requested_mode)
 			requested_mode = "scene"
 		self.current_mode_key = requested_mode
@@ -87,15 +88,24 @@ class ModeController:
 		self.fps_value = 0.0
 
 	# ------------------------------------------------------------------
+	def _get_mode(self, key: str) -> object:
+		factory = self._mode_factories.get(key)
+		if factory is None:
+			raise KeyError(key)
+		if key not in self._mode_instances:
+			logger.info("Lazy-loading %s mode", key)
+			self._mode_instances[key] = factory()
+		return self._mode_instances[key]
+
 	def _switch_mode(self, target_key: str) -> None:
 		if target_key == self.current_mode_key:
 			return
-		if target_key not in self.modes:
+		if target_key not in self._mode_factories:
 			logger.warning("Unknown mode key requested: %s", target_key)
 			return
 
 		logger.info("Switching mode: %s -> %s", self.current_mode_key, target_key)
-		current = self.modes[self.current_mode_key]
+		current = self._get_mode(self.current_mode_key)
 		if hasattr(current, "on_exit"):
 			try:
 				current.on_exit()
@@ -104,7 +114,7 @@ class ModeController:
 
 		self.current_mode_key = target_key
 
-		new_mode = self.modes[self.current_mode_key]
+		new_mode = self._get_mode(self.current_mode_key)
 		if hasattr(new_mode, "on_enter"):
 			try:
 				new_mode.on_enter()
@@ -278,12 +288,15 @@ class ModeController:
 		if config.FRAME_HEIGHT:
 			capture.set(cv2.CAP_PROP_FRAME_HEIGHT, config.FRAME_HEIGHT)
 
-		initial_mode = self.modes[self.current_mode_key]
+		initial_mode = self._get_mode(self.current_mode_key)
 		if hasattr(initial_mode, "on_enter"):
 			try:
 				initial_mode.on_enter()
 			except Exception as exc:  # noqa: BLE001
 				logger.debug("Initial on_enter failed: %s", exc)
+
+		self._add_overlay("Camera ready. Choose a mode.", duration=3.0)
+		self._speak_messages(["Camera ready. Choose a mode."])
 
 		detections: Sequence[Detection] = []
 
@@ -294,7 +307,7 @@ class ModeController:
 					logger.warning("Camera frame grab failed, stopping controller")
 					break
 
-				current_mode = self.modes[self.current_mode_key]
+				current_mode = self._get_mode(self.current_mode_key)
 				info_lines: Sequence[str]
 				speech_messages: List[str]
 
@@ -337,7 +350,7 @@ class ModeController:
 		finally:
 			capture.release()
 			cv2.destroyAllWindows()
-			for mode in self.modes.values():
+			for mode in self._mode_instances.values():
 				if hasattr(mode, "on_exit"):
 					try:
 						mode.on_exit()

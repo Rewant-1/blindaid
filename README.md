@@ -57,6 +57,12 @@ A consolidated multi-modal assistive technology system designed to help visually
 #### Integrated Controller (Recommended)
 
 ```bash
+python -O -m blindaid
+```
+
+Running with Python's optimized flag (`-O`) strips debug assertions and shaves a bit of startup overhead. Use the plain `python -m blindaid` form if you need those checks.
+
+```bash
 python -m blindaid
 ```
 
@@ -83,6 +89,8 @@ python -m blindaid --no-audio        # Mute TTS output
 python -m blindaid --debug           # Verbose logging
 ```
 
+Logging now defaults to `WARNING` level to keep frame-time smooth; reach for `--debug` only when you actively need trace output.
+
 Fine-grained thresholds (confidence, cooldowns, etc.) now live in `blindaid/core/config.py` for clarity.
 
 ## Advanced Usage
@@ -92,6 +100,18 @@ Fine-grained thresholds (confidence, cooldowns, etc.) now live in `blindaid/core
 - **Confidence + thresholds**: Adjust `OBJECT_CONFIDENCE`, `TEXT_CONFIDENCE`, and cooldown timers inside `blindaid/core/config.py`.
 - **Known faces**: Drop JPEGs into `resources/known_faces/<person_name>/` (no CLI flag needed anymore).
 - **Optional extras**: Install `pip install -e .[advanced]` or `.[full]` to enable caption/depth helpers.
+
+## Performance Tips
+
+- **Lazy model loading**: The controller now opens the camera instantly and only spins up mode-specific models (YOLO, PaddleOCR, etc.) the first time you activate that mode.
+- **Fast PaddleOCR**: Reading mode forces `use_fast=True` and `use_gpu=False`, so you get the lightweight CPU graph by default; no extra config required.
+- **Optimized interpreter**: Prefer `python -O -m blindaid` for demos—every millisecond saved on startup matters on CPUs like the Pi 5.
+- **Slim logging**: Keep the default WARNING log level for smooth frames; toggle `--debug` temporarily when diagnosing issues.
+- **ONNX exports for YOLO**:
+   1. Install the runtime once: `pip install onnxruntime` (CPU) or `onnxruntime-gpu`.
+   2. Export each Ultralytics checkpoint: `yolo export model=resources/models/object_blind_aide.pt format=onnx` (repeat for the face model).
+   3. Point `OBJECT_DETECTION_MODEL` / `FACE_RECOGNITION_MODEL` in `blindaid/core/config.py` to the new `.onnx` files.
+   4. Restart the controller—Ultralytics will pick the ONNXRuntime backend automatically and you should see noticeably faster CPU inference.
 
 ## Project Structure
 

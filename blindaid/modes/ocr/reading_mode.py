@@ -7,8 +7,6 @@ from typing import List, Tuple
 
 import cv2
 import numpy as np
-from paddleocr import PaddleOCR
-
 from blindaid.core import config
 
 logger = logging.getLogger(__name__)
@@ -20,13 +18,8 @@ class ReadingMode:
     def __init__(self, audio_enabled: bool = True, language: str = "en"):
         self.audio_enabled = audio_enabled
         self.language = language
-        logger.info("Initializing PaddleOCR for reading mode")
-        self.ocr = PaddleOCR(
-            lang=language,
-            use_angle_cls=True,
-            text_det_limit_side_len=640,
-        )
-        logger.info("PaddleOCR ready")
+        self.ocr = None
+        self._ocr_failed = False
 
         self.frame_count = 0
         self.skip = max(0, config.OCR_FRAME_SKIP)
@@ -36,6 +29,34 @@ class ReadingMode:
         self.last_text = ""
         self.last_text_data: List[Tuple[str, float, np.ndarray]] = []
         self.info_lines: List[str] = []
+
+    # ------------------------------------------------------------------
+    def _ensure_ocr(self):
+        if self.ocr is not None or self._ocr_failed:
+            return self.ocr
+
+        try:
+            from paddleocr import PaddleOCR  # Local import to defer heavy dependency cost
+
+            logger.info("Lazy-loading PaddleOCR for reading mode")
+            self.ocr = PaddleOCR(
+                lang=self.language,
+                use_angle_cls=True,
+                use_gpu=False,
+                text_det_limit_side_len=640,
+                use_fast=True,
+            )
+            logger.info("PaddleOCR ready")
+        except Exception as exc:  # noqa: BLE001
+            self._ocr_failed = True
+            logger.error("Failed to initialize PaddleOCR: %s", exc)
+        return self.ocr
+
+    def _run_ocr(self, frame: np.ndarray):
+        engine = self._ensure_ocr()
+        if engine is None:
+            return None
+        return engine.ocr(frame)
 
     # ------------------------------------------------------------------
     def _parse_result(self, result, frame_shape) -> List[Tuple[str, float, np.ndarray]]:
@@ -104,12 +125,14 @@ class ReadingMode:
         self.frame_count += 1
         should_run = (self.frame_count % (self.skip + 1)) == 0
         if should_run:
-            result = self.ocr.ocr(display)
+            result = self._run_ocr(display)
             parsed = self._parse_result(result, display.shape)
             if parsed:
                 self.last_text_data = parsed
             else:
                 self.last_text_data = []
+        elif not self.last_text_data and self._ocr_failed:
+            info_lines.append("OCR engine unavailable - see logs")
 
         if self.last_text_data:
             texts = [text for text, score, _ in self.last_text_data if text]
@@ -129,7 +152,10 @@ class ReadingMode:
                     self.last_text = info_text
                     self.last_spoken = now
         else:
-            info_lines.append("No text detected - show printed text to the camera")
+            if self._ocr_failed:
+                info_lines.append("OCR engine unavailable - check PaddleOCR install")
+            else:
+                info_lines.append("No text detected - show printed text to the camera")
 
         return display, info_lines, speech
 

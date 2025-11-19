@@ -34,17 +34,16 @@ class SceneMode:
     def __init__(self, audio_enabled: bool = True):
         self.audio_enabled = audio_enabled
 
-        # Models
-        self.object_model = YOLO(str(config.OBJECT_DETECTION_MODEL))
-        logger.info("Object detection model loaded for scene mode")
-        self.face_detector = YOLO(str(config.FACE_RECOGNITION_MODEL))
-        logger.info("Face detection model loaded for scene mode")
+        # Models (lazy-loaded)
+        self.object_model: Optional[YOLO] = None
+        self.face_detector: Optional[YOLO] = None
+        self._object_model_failed = False
+        self._face_model_failed = False
 
-        # Known faces
-        (
-            self.known_face_encodings,
-            self.known_face_names,
-        ) = self._load_known_faces(config.KNOWN_FACES_DIR)
+        # Known faces (lazy-loaded to avoid blocking startup)
+        self.known_face_encodings: List[np.ndarray] = []
+        self.known_face_names: List[str] = []
+        self._faces_loaded = False
 
         # State
         self.object_confidence = config.OBJECT_DETECTION_CONFIDENCE
@@ -57,6 +56,37 @@ class SceneMode:
         self.last_detections: List[Detection] = []
         self.last_object_summary: Optional[str] = None
         self.last_face_summary: Optional[str] = None
+
+    # ------------------------------------------------------------------
+    def _ensure_object_model(self) -> Optional[YOLO]:
+        if self.object_model is not None or self._object_model_failed:
+            return self.object_model
+        try:
+            logger.info("Loading object detection model for scene mode")
+            self.object_model = YOLO(str(config.OBJECT_DETECTION_MODEL))
+            logger.info("Object detection model ready")
+        except Exception as exc:  # noqa: BLE001
+            self._object_model_failed = True
+            logger.error("Object detection model unavailable: %s", exc)
+        return self.object_model
+
+    def _ensure_face_detector(self) -> Optional[YOLO]:
+        if self.face_detector is not None or self._face_model_failed:
+            return self.face_detector
+        try:
+            logger.info("Loading face detection model for scene mode")
+            self.face_detector = YOLO(str(config.FACE_RECOGNITION_MODEL))
+            logger.info("Face detection model ready")
+        except Exception as exc:  # noqa: BLE001
+            self._face_model_failed = True
+            logger.error("Face detection model unavailable: %s", exc)
+        return self.face_detector
+
+    def _ensure_known_faces(self) -> None:
+        if self._faces_loaded:
+            return
+        self.known_face_encodings, self.known_face_names = self._load_known_faces(config.KNOWN_FACES_DIR)
+        self._faces_loaded = True
 
     # ------------------------------------------------------------------
     # Face utilities
@@ -90,6 +120,7 @@ class SceneMode:
         return encodings, names
 
     def _recognize_face(self, encoding: np.ndarray) -> Tuple[str, float]:
+        self._ensure_known_faces()
         if not self.known_face_encodings:
             return "Unknown", 0.0
         dists = face_recognition.face_distance(self.known_face_encodings, encoding)
@@ -149,78 +180,88 @@ class SceneMode:
 
         if should_process:
             # Object detection -------------------------------------------------
-            object_results = self.object_model(display_frame, conf=self.object_confidence, verbose=False)
             object_dets: List[Detection] = []
-            if object_results:
-                boxes = object_results[0].boxes
-                for box in boxes:
-                    cls_id = int(box.cls[0])
-                    label = self.object_model.names.get(cls_id, f"cls_{cls_id}")
-                    conf = float(box.conf[0])
-                    x1, y1, x2, y2 = map(int, box.xyxy[0])
-                    x1, y1 = max(x1, 0), max(y1, 0)
-                    x2, y2 = min(x2, w - 1), min(y2, h - 1)
-                    position = self._object_position((x1 + x2) / 2, w)
-                    object_dets.append(
-                        Detection(
-                            label=label,
-                            box=(x1, y1, x2, y2),
-                            confidence=conf,
-                            kind="object",
-                            position=position,
+            object_model = self._ensure_object_model()
+            if object_model is None:
+                if self._object_model_failed:
+                    info_lines.append("Object detection unavailable - see logs")
+            else:
+                object_results = object_model(display_frame, conf=self.object_confidence, verbose=False)
+                if object_results:
+                    boxes = object_results[0].boxes
+                    for box in boxes:
+                        cls_id = int(box.cls[0])
+                        label = object_model.names.get(cls_id, f"cls_{cls_id}")
+                        conf = float(box.conf[0])
+                        x1, y1, x2, y2 = map(int, box.xyxy[0])
+                        x1, y1 = max(x1, 0), max(y1, 0)
+                        x2, y2 = min(x2, w - 1), min(y2, h - 1)
+                        position = self._object_position((x1 + x2) / 2, w)
+                        object_dets.append(
+                            Detection(
+                                label=label,
+                                box=(x1, y1, x2, y2),
+                                confidence=conf,
+                                kind="object",
+                                position=position,
+                            )
                         )
-                    )
-                    cv2.rectangle(display_frame, (x1, y1), (x2, y2), (0, 165, 255), 2)
-                    cv2.putText(
-                        display_frame,
-                        f"{label} {conf*100:.0f}%",
-                        (x1, max(20, y1 - 10)),
-                        cv2.FONT_HERSHEY_SIMPLEX,
-                        0.6,
-                        (0, 165, 255),
-                        2,
-                    )
+                        cv2.rectangle(display_frame, (x1, y1), (x2, y2), (0, 165, 255), 2)
+                        cv2.putText(
+                            display_frame,
+                            f"{label} {conf*100:.0f}%",
+                            (x1, max(20, y1 - 10)),
+                            cv2.FONT_HERSHEY_SIMPLEX,
+                            0.6,
+                            (0, 165, 255),
+                            2,
+                        )
 
             # Face detection ---------------------------------------------------
             rgb_small = cv2.cvtColor(display_frame, cv2.COLOR_BGR2RGB)
-            face_results = self.face_detector(rgb_small, verbose=False)
             face_dets: List[Detection] = []
             face_locations = []
-            if face_results:
-                boxes = face_results[0].boxes.xyxy.cpu().numpy().astype(int)
-                for (x1, y1, x2, y2) in boxes:
-                    x1, y1 = max(x1, 0), max(y1, 0)
-                    x2, y2 = min(x2, w - 1), min(y2, h - 1)
-                    face_locations.append((y1, x2, y2, x1))
+            face_detector = self._ensure_face_detector()
+            if face_detector is None:
+                if self._face_model_failed:
+                    info_lines.append("Face detection unavailable - see logs")
+            else:
+                face_results = face_detector(rgb_small, verbose=False)
+                if face_results:
+                    boxes = face_results[0].boxes.xyxy.cpu().numpy().astype(int)
+                    for (x1, y1, x2, y2) in boxes:
+                        x1, y1 = max(x1, 0), max(y1, 0)
+                        x2, y2 = min(x2, w - 1), min(y2, h - 1)
+                        face_locations.append((y1, x2, y2, x1))
 
-                encodings = face_recognition.face_encodings(rgb_small, face_locations)
-                for (top, right, bottom, left), enc in zip(face_locations, encodings):
-                    name, conf = self._recognize_face(enc)
-                    position = self._object_position((left + right) / 2, w)
-                    face_dets.append(
-                        Detection(
-                            label=name,
-                            box=(left, top, right, bottom),
-                            confidence=conf,
-                            kind="face",
-                            position=position,
+                    encodings = face_recognition.face_encodings(rgb_small, face_locations)
+                    for (top, right, bottom, left), enc in zip(face_locations, encodings):
+                        name, conf = self._recognize_face(enc)
+                        position = self._object_position((left + right) / 2, w)
+                        face_dets.append(
+                            Detection(
+                                label=name,
+                                box=(left, top, right, bottom),
+                                confidence=conf,
+                                kind="face",
+                                position=position,
+                            )
                         )
-                    )
-                    color = (0, 255, 0) if name != "Unknown" else (0, 0, 255)
-                    cv2.rectangle(display_frame, (left, top), (right, bottom), color, 2)
-                    label_text = name if name != "Unknown" else "Unknown person"
-                    if name != "Unknown":
-                        label_text += f" {conf*100:.0f}%"
-                    cv2.rectangle(display_frame, (left, bottom - 30), (right, bottom), color, cv2.FILLED)
-                    cv2.putText(
-                        display_frame,
-                        f"{label_text} ({position})",
-                        (left + 5, bottom - 8),
-                        cv2.FONT_HERSHEY_SIMPLEX,
-                        0.5,
-                        (255, 255, 255),
-                        1,
-                    )
+                        color = (0, 255, 0) if name != "Unknown" else (0, 0, 255)
+                        cv2.rectangle(display_frame, (left, top), (right, bottom), color, 2)
+                        label_text = name if name != "Unknown" else "Unknown person"
+                        if name != "Unknown":
+                            label_text += f" {conf*100:.0f}%"
+                        cv2.rectangle(display_frame, (left, bottom - 30), (right, bottom), color, cv2.FILLED)
+                        cv2.putText(
+                            display_frame,
+                            f"{label_text} ({position})",
+                            (left + 5, bottom - 8),
+                            cv2.FONT_HERSHEY_SIMPLEX,
+                            0.5,
+                            (255, 255, 255),
+                            1,
+                        )
 
             detections = object_dets + face_dets
             self.last_detections = detections
