@@ -1,1 +1,0 @@
-"""Face Recognition mode module."""

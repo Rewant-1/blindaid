@@ -60,9 +60,9 @@ Examples:
     parser.add_argument(
         "--start-mode",
         type=str,
-        default="scene",
-        choices=["scene", "reading"],
-        help="Mode to start in (default: scene)",
+        default="guardian",
+        choices=["guardian", "reading"],
+        help="Mode to start in (default: guardian)",
     )
     parser.add_argument(
         "--camera",
