@@ -247,7 +247,7 @@ class ModeController:
                 logger.debug("Initial on_enter failed: %s", exc)
 
         self._add_overlay("System Ready. Guardian Mode Active.", duration=3.0)
-        self._speak_messages(["System Ready"])
+        self._speak_messages(["BlindAid Online. Battery Check OK. Ready."])
 
         try:
             while True:

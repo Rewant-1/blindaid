@@ -27,6 +27,7 @@ class ReadingMode:
         self.confidence_threshold = config.OCR_CONFIDENCE_THRESHOLD
         self.last_spoken = 0.0
         self.last_text = ""
+        self.stable_text_count = 0
         self.last_text_data: List[Tuple[str, float, np.ndarray]] = []
         self.info_lines: List[str] = []
 
@@ -141,15 +142,22 @@ class ReadingMode:
                 info_lines.append(info_text)
                 now = time.time()
                 high_conf_texts = [text for text, score, _ in self.last_text_data if score >= self.confidence_threshold]
+                
+                # Stabilization check
+                if info_text == self.last_text:
+                    self.stable_text_count += 1
+                else:
+                    self.stable_text_count = 0
+                    self.last_text = info_text
+                
                 if (
                     self.audio_enabled
                     and high_conf_texts
-                    and info_text != self.last_text
+                    and self.stable_text_count >= 2
                     and (now - self.last_spoken) > self.cooldown
                 ):
                     speech_text = " ".join(high_conf_texts)
                     speech.append(speech_text)
-                    self.last_text = info_text
                     self.last_spoken = now
         else:
             if self._ocr_failed:

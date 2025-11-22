@@ -44,7 +44,7 @@ class GuardianMode:
         
         # FPS Control
         self.idle_process_interval = 10  # Process every 10th frame
-        self.active_process_interval = 2   # Process every 2nd frame (30fps -> 15fps)
+        self.active_process_interval = 6   # Process every 6th frame (approx 5 times a second)
 
     def _ensure_depth_analyzer(self) -> DepthAnalyzer:
         if self.depth_analyzer is None:
