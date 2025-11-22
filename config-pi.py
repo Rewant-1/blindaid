@@ -27,7 +27,7 @@ OCR_COOLDOWN_SECONDS = 5
 OCR_FRAME_SKIP = 5  # Process every 5th frame for better performance
 
 # Face Recognition settings - OPTIMIZED FOR PI
-FACE_RECOGNITION_MODEL = MODELS_DIR / "yolov9t-face-lindevs.pt"
+FACE_RECOGNITION_MODEL = MODELS_DIR / "yolov9t-face-lindevs.onnx"
 FACE_THRESHOLD = 0.5
 FACE_DETECTION_MODEL = "hog"  # HOG is faster than CNN on CPU
 FACE_FRAME_SCALE = 0.15  # Aggressive downscaling for Pi (was 0.25)

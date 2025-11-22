@@ -26,7 +26,7 @@ OCR_COOLDOWN_SECONDS = 5
 OCR_FRAME_SKIP = 4
 
 # Face Recognition settings
-FACE_RECOGNITION_MODEL = MODELS_DIR / "yolov9t-face-lindevs.pt"
+FACE_RECOGNITION_MODEL = MODELS_DIR / "yolov9t-face-lindevs.onnx"
 FACE_THRESHOLD = 0.5
 FACE_DETECTION_MODEL = "hog"  # "hog" or "cnn"
 FACE_FRAME_SCALE = 0.25
