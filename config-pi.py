@@ -15,7 +15,7 @@ KNOWN_FACES_DIR = RESOURCES_DIR / "known_faces"
 DEFAULT_CAMERA_INDEX = 0
 
 # Object Detection settings - OPTIMIZED FOR PI
-OBJECT_DETECTION_MODEL = MODELS_DIR / "object_blind_aide.pt"
+OBJECT_DETECTION_MODEL = MODELS_DIR / "object_blind_aide.onnx"
 OBJECT_DETECTION_CONFIDENCE = 0.5  # Lowered for faster processing
 OBJECT_DETECTION_FRAME_SKIP = 5    # Process every 5th frame
 SCENE_PROCESS_EVERY = 3

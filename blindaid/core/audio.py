@@ -21,6 +21,8 @@ class AudioPlayer:
         self.rate = rate
         self.volume = volume
         self.use_online = use_online
+        self._pytt_engine = None
+        self._pygame_initialized = False
         self.queue: Queue[str | None] = Queue(maxsize=10)
         self.worker_thread = Thread(target=self._worker, daemon=True)
         self.worker_thread.start()
@@ -28,18 +30,20 @@ class AudioPlayer:
 
     def _worker(self):
         """Worker thread that processes audio queue."""
-        # Try initializing pyttsx3 first if offline
-        engine = None
+        # Try to initialize pyttsx3 engine in the main thread if offline mode
         if not self.use_online:
             try:
                 import pyttsx3
-                engine = pyttsx3.init()
-                engine.setProperty("rate", self.rate)
-                engine.setProperty("volume", self.volume)
+
+                # Keep engine on self so later errors won't cause the worker to silently stop
+                self._pytt_engine = pyttsx3.init()
+                self._pytt_engine.setProperty("rate", self.rate)
+                self._pytt_engine.setProperty("volume", self.volume)
+                logger.info("pyttsx3 engine initialized in AudioPlayer")
             except ImportError:
-                logger.warning("pyttsx3 not found, falling back to gTTS if available")
+                logger.warning("pyttsx3 not found in environment, falling back to gTTS")
                 self.use_online = True
-            except Exception as exc:
+            except Exception as exc:  # noqa: BLE001
                 logger.warning("pyttsx3 init failed: %s. Falling back to gTTS.", exc)
                 self.use_online = True
 
@@ -52,16 +56,26 @@ class AudioPlayer:
                 logger.debug("Playing audio: %s", message)
                 
                 if self.use_online:
+                    # Always use the online TTS path
+                    self._ensure_pygame()
                     self._speak_gtts(message)
                 else:
                     try:
-                        # Re-init engine properties just in case
-                        if engine:
-                            engine.say(message)
-                            engine.runAndWait()
-                    except Exception as exc:
-                        logger.error("pyttsx3 error: %s. Switching to gTTS.", exc)
+                        if self._pytt_engine is None:
+                            # Try to reinitialize in-thread as a recovery
+                            import pyttsx3
+
+                            self._pytt_engine = pyttsx3.init()
+                            self._pytt_engine.setProperty("rate", self.rate)
+                            self._pytt_engine.setProperty("volume", self.volume)
+
+                        # Speak via pyttsx3 engine (blocking in worker thread)
+                        self._pytt_engine.say(message)
+                        self._pytt_engine.runAndWait()
+                    except Exception as exc:  # noqa: BLE001
+                        logger.exception("pyttsx3 playback failed - switching to gTTS: %s", exc)
                         self.use_online = True
+                        self._ensure_pygame()
                         self._speak_gtts(message)
 
                 self.queue.task_done()
@@ -79,7 +93,9 @@ class AudioPlayer:
             
             # Initialize pygame mixer if not already
             if not pygame.mixer.get_init():
-                pygame.mixer.init()
+                # Use small buffer on low power machines
+                pygame.mixer.init(frequency=22050, size=-16, channels=2, buffer=4096)
+            self._pygame_initialized = True
 
             tts = gTTS(text=text, lang='en')
             with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as fp:
@@ -95,13 +111,34 @@ class AudioPlayer:
                     break
                 time.sleep(0.1)
                 
-            pygame.mixer.music.unload()
+            try:
+                pygame.mixer.music.unload()
+            except Exception:
+                # Older pygame lacks unload; stop and load a blank
+                try:
+                    pygame.mixer.music.stop()
+                except Exception:
+                    pass
             os.remove(temp_filename)
             
         except ImportError:
             logger.error("gTTS or pygame not installed. Cannot play audio.")
         except Exception as exc:
             logger.error("gTTS playback failed: %s", exc)
+
+    def _ensure_pygame(self):
+        """Ensure pygame mixer is initialized (idempotent)."""
+        if self._pygame_initialized:
+            return
+        try:
+            import pygame
+
+            if not pygame.mixer.get_init():
+                pygame.mixer.init(frequency=22050, size=-16, channels=2, buffer=4096)
+            self._pygame_initialized = True
+        except Exception as exc:  # noqa: BLE001
+            logger.exception("Failed to initialize pygame mixer: %s", exc)
+            raise
 
     def speak(self, message: str):
         """Add message to audio queue (non-blocking)."""
@@ -114,3 +151,14 @@ class AudioPlayer:
         """Gracefully shutdown audio player."""
         self.queue.put(None)
         self.worker_thread.join(timeout=2.0)
+        # Cleanup mixer if we used it
+        if self._pygame_initialized:
+            try:
+                import pygame
+
+                try:
+                    pygame.mixer.quit()
+                except Exception:
+                    pass
+            except Exception:
+                pass

@@ -36,12 +36,15 @@ FACE_OVERLAY_TIMEOUT = 0.6
 
 # Scene mode defaults
 SCENE_OBJECT_COOLDOWN_SECONDS = 4.0
-SCENE_HINT_TEXT = "1: Scene  2: Reading  C: Caption  D: Depth  Q: Quit"
+SCENE_HINT_TEXT = "1:Scene 2:Read P:People V:Ask Space:Cap Q:Quit"
 
 # Audio/TTS settings
 AUDIO_ENABLED = True
 TTS_RATE = 150
 TTS_VOLUME = 0.9
+# If True, force use of online TTS (gTTS + pygame) instead of offline pyttsx3.
+# Useful when pyttsx3 cannot access a Windows voice driver or is unstable.
+TTS_FORCE_ONLINE = False
 
 # Display settings
 DISPLAY_FPS = True
@@ -50,5 +53,5 @@ BOUNDING_BOX_COLOR_UNKNOWN = (0, 0, 255)  # Red
 BOUNDING_BOX_THICKNESS = 2
 
 # Performance
-FRAME_WIDTH = 480
-FRAME_HEIGHT = 360
+FRAME_WIDTH = 320
+FRAME_HEIGHT = 240

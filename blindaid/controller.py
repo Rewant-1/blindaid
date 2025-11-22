@@ -51,7 +51,10 @@ class ModeController:
         self.audio_player: Optional[AudioPlayer] = None
         if self.audio_enabled:
             try:
-                self.audio_player = AudioPlayer(rate=config.TTS_RATE, volume=config.TTS_VOLUME)
+                # Respect configuration: allow forcing online TTS if pyttsx3/SAPI is unreliable
+                self.audio_player = AudioPlayer(
+                    rate=config.TTS_RATE, volume=config.TTS_VOLUME, use_online=getattr(config, 'TTS_FORCE_ONLINE', False)
+                )
             except Exception as exc:  # noqa: BLE001
                 logger.warning("Audio player initialization failed: %s", exc)
                 self.audio_player = None
@@ -257,7 +260,20 @@ class ModeController:
         for overlay in extra_lines:
             lines_to_draw.append(overlay)
 
-        bottom_y = h - 20
+        # Draw the static hint text at the very bottom
+        bottom_y = h - 10
+        cv2.putText(
+            frame,
+            config.SCENE_HINT_TEXT,
+            (10, bottom_y),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.5,
+            (200, 200, 200),
+            1,
+        )
+
+        # Draw dynamic messages above the hint text
+        bottom_y -= 25
         for line in reversed(lines_to_draw[-6:]):  # limit clutter
             cv2.putText(
                 frame,
@@ -343,6 +359,10 @@ class ModeController:
                     self._handle_caption_request(frame)
                 elif key in (ord("v"), ord("V")):
                     self._handle_vqa_request(frame)
+                elif key in (ord("t"), ord("T")):
+                    # Quick TTS test to validate audio at runtime
+                    self._add_overlay("TTS Test", duration=2.0)
+                    self._speak_messages(["Audio check one two three."])
                 elif key in (ord("p"), ord("P")):
                     if self.current_mode_key != "people":
                         self.previous_mode_key = self.current_mode_key

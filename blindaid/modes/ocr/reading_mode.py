@@ -43,10 +43,9 @@ class ReadingMode:
             self.ocr = PaddleOCR(
                 lang=self.language,
                 use_angle_cls=True,
-                use_gpu=True,
-                gpu_mem=500,
+                use_gpu=False,
                 text_det_limit_side_len=640,
-                use_fast=True,
+                
             )
             logger.info("PaddleOCR ready")
         except Exception as exc:  # noqa: BLE001
