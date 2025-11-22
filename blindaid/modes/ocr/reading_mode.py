@@ -43,7 +43,8 @@ class ReadingMode:
             self.ocr = PaddleOCR(
                 lang=self.language,
                 use_angle_cls=True,
-                use_gpu=False,
+                use_gpu=True,
+                gpu_mem=500,
                 text_det_limit_side_len=640,
                 use_fast=True,
             )

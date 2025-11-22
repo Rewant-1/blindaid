@@ -37,6 +37,8 @@ dependencies = [
     "pyttsx3>=2.90",
     "gTTS>=2.3.0",
     "pygame>=2.5.0",
+    "SpeechRecognition>=3.10.0",
+    "PyAudio>=0.2.13",
     "matplotlib>=3.7.0",
     "pandas>=2.0.0"
 ]

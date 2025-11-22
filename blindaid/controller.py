@@ -15,8 +15,9 @@ except ModuleNotFoundError as exc:
 
 from blindaid.core import config
 from blindaid.core.audio import AudioPlayer
-from blindaid.core.caption import CaptionGenerator
+from blindaid.core.caption import VisualAssistant
 from blindaid.core.depth import DepthAnalyzer
+from blindaid.core.speech_recognition import SpeechListener
 from blindaid.modes.guardian.guardian_mode import GuardianMode
 from blindaid.modes.ocr.reading_mode import ReadingMode
 from blindaid.modes.people.people_mode import PeopleMode
@@ -79,7 +80,8 @@ class ModeController:
         self.current_mode_key = requested_mode
         self.previous_mode_key = requested_mode
 
-        self.caption_generator: Optional[CaptionGenerator] = None
+        self.visual_assistant: Optional[VisualAssistant] = None
+        self.speech_listener: Optional[SpeechListener] = None
         self.depth_analyzer: Optional[DepthAnalyzer] = None
 
         self.overlays: List[OverlayMessage] = []
@@ -159,10 +161,15 @@ class ModeController:
             self.fps_counter = 0
             self.fps_last_time = now
 
-    def _ensure_caption_generator(self) -> CaptionGenerator:
-        if self.caption_generator is None:
-            self.caption_generator = CaptionGenerator()
-        return self.caption_generator
+    def _ensure_visual_assistant(self) -> VisualAssistant:
+        if self.visual_assistant is None:
+            self.visual_assistant = VisualAssistant()
+        return self.visual_assistant
+
+    def _ensure_speech_listener(self) -> SpeechListener:
+        if self.speech_listener is None:
+            self.speech_listener = SpeechListener()
+        return self.speech_listener
 
     def _handle_caption_request(self, frame) -> None:
         try:
@@ -170,8 +177,8 @@ class ModeController:
             # Force a redraw to show "Analyzing..."
             cv2.waitKey(1)
             
-            captioner = self._ensure_caption_generator()
-            caption = captioner.generate_caption(frame)
+            assistant = self._ensure_visual_assistant()
+            caption = assistant.generate_caption(frame)
             if caption:
                 self._add_overlay(f"Caption: {caption}", duration=6.0)
                 self._speak_messages([caption])
@@ -181,6 +188,45 @@ class ModeController:
         except Exception as exc:  # noqa: BLE001
             logger.exception("Caption generation failed: %s", exc)
             self._add_overlay("Caption error - see logs", duration=3.0)
+
+    def _handle_vqa_request(self, frame) -> None:
+        try:
+            listener = self._ensure_speech_listener()
+            
+            self._add_overlay("Listening... (Speak now)", duration=5.0)
+            self._speak_messages(["Listening..."])
+            cv2.waitKey(1)  # Update UI
+            
+            # Pause briefly to let TTS start/finish "Listening"
+            time.sleep(0.5)
+            
+            question = listener.listen_for_command(timeout=5)
+            
+            if not question:
+                self._add_overlay("No question heard.", duration=2.0)
+                self._speak_messages(["I didn't hear a question."])
+                return
+
+            self._add_overlay(f"Q: {question}", duration=4.0)
+            self._speak_messages([f"You asked: {question}"])
+            cv2.waitKey(1)
+
+            self._add_overlay("Thinking...", duration=2.0)
+            assistant = self._ensure_visual_assistant()
+            answer = assistant.answer_question(frame, question)
+            
+            if answer:
+                self._add_overlay(f"A: {answer}", duration=6.0)
+                self._speak_messages([answer])
+                logger.info("VQA: Q='%s' A='%s'", question, answer)
+            else:
+                self._add_overlay("Could not answer.", duration=2.0)
+                self._speak_messages(["I couldn't find an answer."])
+
+        except Exception as exc:
+            logger.exception("VQA failed: %s", exc)
+            self._add_overlay("Error processing question", duration=3.0)
+            self._speak_messages(["Sorry, I encountered an error."])
 
     def _draw_overlay_text(self, frame, info_lines: Sequence[str], extra_lines: Sequence[str]) -> None:
         h, w = frame.shape[:2]
@@ -295,6 +341,8 @@ class ModeController:
                     self._switch_mode("reading")
                 elif key == 32: # Space
                     self._handle_caption_request(frame)
+                elif key in (ord("v"), ord("V")):
+                    self._handle_vqa_request(frame)
                 elif key in (ord("p"), ord("P")):
                     if self.current_mode_key != "people":
                         self.previous_mode_key = self.current_mode_key
