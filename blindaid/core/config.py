@@ -26,7 +26,7 @@ OCR_COOLDOWN_SECONDS = 5
 OCR_FRAME_SKIP = 4
 
 # Face Recognition settings
-FACE_RECOGNITION_MODEL = MODELS_DIR / "yolov9t-face-lindevs.onnx"
+FACE_RECOGNITION_MODEL = MODELS_DIR / "yolov9t-face-lindevs.pt"
 FACE_THRESHOLD = 0.5
 FACE_DETECTION_MODEL = "hog"  # "hog" or "cnn"
 FACE_FRAME_SCALE = 0.25
@@ -44,7 +44,7 @@ TTS_RATE = 150
 TTS_VOLUME = 0.9
 # If True, force use of online TTS (gTTS + pygame) instead of offline pyttsx3.
 # Useful when pyttsx3 cannot access a Windows voice driver or is unstable.
-TTS_FORCE_ONLINE = False
+TTS_FORCE_ONLINE = True  # Force gTTS + pygame (online) as requested
 
 # Display settings
 DISPLAY_FPS = True

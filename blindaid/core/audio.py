@@ -15,7 +15,11 @@ shutdown_event = Event()
 
 
 class AudioPlayer:
-    """Thread-safe audio player supporting pyttsx3 (offline) and gTTS (online)."""
+    """Thread-safe audio player that uses Google TTS (gTTS) + pygame for playback.
+
+    We intentionally removed pyttsx3 to avoid SAPI driver problems on Windows and
+    force use of online gTTS as requested.
+    """
 
     def __init__(self, rate: int = 150, volume: float = 0.9, use_online: bool = False):
         self.rate = rate
@@ -30,22 +34,8 @@ class AudioPlayer:
 
     def _worker(self):
         """Worker thread that processes audio queue."""
-        # Try to initialize pyttsx3 engine in the main thread if offline mode
-        if not self.use_online:
-            try:
-                import pyttsx3
-
-                # Keep engine on self so later errors won't cause the worker to silently stop
-                self._pytt_engine = pyttsx3.init()
-                self._pytt_engine.setProperty("rate", self.rate)
-                self._pytt_engine.setProperty("volume", self.volume)
-                logger.info("pyttsx3 engine initialized in AudioPlayer")
-            except ImportError:
-                logger.warning("pyttsx3 not found in environment, falling back to gTTS")
-                self.use_online = True
-            except Exception as exc:  # noqa: BLE001
-                logger.warning("pyttsx3 init failed: %s. Falling back to gTTS.", exc)
-                self.use_online = True
+        # We always use gTTS/pygame in the worker thread
+        self.use_online = True
 
         while not shutdown_event.is_set():
             try:
@@ -60,23 +50,9 @@ class AudioPlayer:
                     self._ensure_pygame()
                     self._speak_gtts(message)
                 else:
-                    try:
-                        if self._pytt_engine is None:
-                            # Try to reinitialize in-thread as a recovery
-                            import pyttsx3
-
-                            self._pytt_engine = pyttsx3.init()
-                            self._pytt_engine.setProperty("rate", self.rate)
-                            self._pytt_engine.setProperty("volume", self.volume)
-
-                        # Speak via pyttsx3 engine (blocking in worker thread)
-                        self._pytt_engine.say(message)
-                        self._pytt_engine.runAndWait()
-                    except Exception as exc:  # noqa: BLE001
-                        logger.exception("pyttsx3 playback failed - switching to gTTS: %s", exc)
-                        self.use_online = True
-                        self._ensure_pygame()
-                        self._speak_gtts(message)
+                    # Should never happen (we force gTTS), but fall back just in case
+                    self._ensure_pygame()
+                    self._speak_gtts(message)
 
                 self.queue.task_done()
             except Empty:
