@@ -1,46 +1,26 @@
-"""
-BlindAid - Main Application Entry Point
-========================================
-Unified controller that handles both scene exploration and reading assistance.
-
-Usage:
-    python -m blindaid                 # Start in scene mode (default)
-    python -m blindaid --start-mode reading
-"""
-import sys
+"""Command-line entry point for the BlindAid controller."""
 import argparse
 import logging
 import signal
-from pathlib import Path
+import sys
 from typing import Sequence, Optional
-
-# Add parent directory to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from blindaid.core import config
 
-# Logger
 logger = logging.getLogger(__name__)
 
 
-def setup_logging(debug=False):
-    """Configure logging."""
-    level = logging.DEBUG if debug else logging.ERROR  # ERROR by default for faster startup
-    logging.basicConfig(
-        level=level,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        handlers=[logging.StreamHandler()]
-    )
+def setup_logging(debug: bool = False) -> None:
+    level = logging.DEBUG if debug else logging.INFO
+    logging.basicConfig(level=level, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
 
-def signal_handler(signum, frame):
-    """Handle shutdown signals gracefully."""
-    logger.info(f"Received signal {signum}, shutting down...")
+def signal_handler(signum, _frame):
+    logger.info("Received signal %s, shutting down", signum)
     sys.exit(0)
 
 
 def parse_arguments(argv: Optional[Sequence[str]] = None):
-    """Parse command-line arguments."""
     parser = argparse.ArgumentParser(
         description="BlindAid - Assistive Technology System",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -82,20 +62,13 @@ Examples:
 
 
 def main():
-    """Main entry point."""
     args = parse_arguments()
     setup_logging(args.debug)
-    
-    # Register signal handlers
     signal.signal(signal.SIGINT, signal_handler)
-    if hasattr(signal, 'SIGTERM'):
+    if hasattr(signal, "SIGTERM"):
         signal.signal(signal.SIGTERM, signal_handler)
-    
-    logger.info("="*70)
-    logger.info("BlindAid System - Integrated Controller")
-    logger.info("="*70)
+    logger.info("Starting BlindAid (mode=%s, camera=%s)", args.start_mode, args.camera)
     try:
-        # Import controller lazily to avoid heavy deps (cv2) at module import time.
         from blindaid.controller import ModeController
 
         controller = ModeController(
@@ -104,11 +77,10 @@ def main():
             initial_mode=args.start_mode,
         )
         controller.run()
-    except Exception as e:  # noqa: BLE001
-        logger.exception("Fatal error: %s", e)
+    except Exception:  # noqa: BLE001
+        logger.exception("Fatal error")
         return 1
-    
-    logger.info("BlindAid System Stopped")
+    logger.info("BlindAid stopped")
     return 0
 
 

@@ -1,9 +1,16 @@
-# BlindAid - Preferred installation path
-# =======================================
-# The project now ships with a pyproject.toml. Installing the editable package with the
-# "full" extra pulls every runtime dependency required for captions, depth, OCR, and TTS.
-
--e .[full]
-
-# Development utilities (optional)
-# -e .[dev]
+numpy
+opencv-python
+Pillow
+ultralytics
+paddleocr
+paddlepaddle-gpu  # Agar GPU use kar raha hai (ya paddlepaddle for CPU)
+face-recognition
+dlib
+pyttsx3
+gTTS
+pygame
+SpeechRecognition
+pyaudio
+torch
+torchvision
+transformers
