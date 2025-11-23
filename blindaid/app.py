@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 def setup_logging(debug=False):
     """Configure logging."""
-    level = logging.DEBUG if debug else logging.WARNING
+    level = logging.DEBUG if debug else logging.ERROR  # ERROR by default for faster startup
     logging.basicConfig(
         level=level,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -60,9 +60,9 @@ Examples:
     parser.add_argument(
         "--start-mode",
         type=str,
-        default="guardian",
-        choices=["guardian", "reading"],
-        help="Mode to start in (default: guardian)",
+        default="sitting",
+        choices=["sitting", "guardian", "reading", "people"],
+        help="Mode to start in (default: sitting)",
     )
     parser.add_argument(
         "--camera",

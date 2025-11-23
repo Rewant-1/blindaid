@@ -21,7 +21,7 @@ SCENE_PROCESS_EVERY = 1
 
 # OCR settings
 OCR_LANGUAGE = 'en'
-OCR_CONFIDENCE_THRESHOLD = 0.9
+OCR_CONFIDENCE_THRESHOLD = 0.95
 OCR_COOLDOWN_SECONDS = 5
 OCR_FRAME_SKIP = 4
 
@@ -36,15 +36,14 @@ FACE_OVERLAY_TIMEOUT = 0.6
 
 # Scene mode defaults
 SCENE_OBJECT_COOLDOWN_SECONDS = 4.0
-SCENE_HINT_TEXT = "1:Scene 2:Read P:People V:Ask Space:Cap Q:Quit"
+SCENE_HINT_TEXT = "0:Sit 1:Walk 2:Read 3:Ppl 4:Ask 5:Cap Q:Quit"
 
 # Audio/TTS settings
 AUDIO_ENABLED = True
 TTS_RATE = 150
 TTS_VOLUME = 0.9
-# If True, force use of online TTS (gTTS + pygame) instead of offline pyttsx3.
-# Useful when pyttsx3 cannot access a Windows voice driver or is unstable.
-TTS_FORCE_ONLINE = True  # Force gTTS + pygame (online) as requested
+# Always use online TTS (gTTS + pygame) for reliability
+TTS_FORCE_ONLINE = True
 
 # Display settings
 DISPLAY_FPS = True

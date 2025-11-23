@@ -27,6 +27,11 @@ class VisualAssistant:
         self._check_deps()
         self._setup_device()
 
+        import os
+        import warnings
+        os.environ['TRANSFORMERS_VERBOSITY'] = 'error'
+        warnings.filterwarnings('ignore', category=FutureWarning)
+        
         logger.info("Loading BLIP captioning model (%s)", self.device)
         from transformers import BlipForConditionalGeneration, BlipProcessor
         self.processor = BlipProcessor.from_pretrained("Salesforce/blip-image-captioning-base")
@@ -40,6 +45,11 @@ class VisualAssistant:
         self._check_deps()
         self._setup_device()
 
+        import os
+        import warnings
+        os.environ['TRANSFORMERS_VERBOSITY'] = 'error'
+        warnings.filterwarnings('ignore', category=FutureWarning)
+        
         logger.info("Loading BLIP VQA model (%s)", self.device)
         from transformers import BlipForQuestionAnswering, BlipProcessor
         self.vqa_processor = BlipProcessor.from_pretrained("Salesforce/blip-vqa-base")

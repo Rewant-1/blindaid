@@ -13,68 +13,33 @@ logger = logging.getLogger(__name__)
 
 class GuardianMode:
     """
-    Guardian Mode (The Smart Default).
-    - Monitors Depth Map.
-    - Idle State (Sitting): Low power, silence.
-    - Active State (Walking): Real-time safety, warns if obstacle < 1m.
+    Walking Mode (Renamed from Guardian).
+    - Always active (no idle state).
+    - Monitors Depth Map continuously.
+    - Warns if obstacle < 1m detected.
     """
-
-    STATE_IDLE = "Sitting (Idle)"
-    STATE_ACTIVE = "Walking (Active)"
 
     def __init__(self, audio_enabled: bool = True):
         self.audio_enabled = audio_enabled
         self.depth_analyzer: Optional[DepthAnalyzer] = None
         
-        # State
-        self.current_state = self.STATE_IDLE
         self.frame_counter = 0
-        
-        # Motion Detection
-        self.prev_gray_frame = None
-        self.motion_threshold = 1000000  # Adjusted for sum of pixels. 
-        # If 640x480, max diff is 255 * 307200. 
-        # Let's use a simpler metric: percentage of changed pixels.
-        self.last_motion_time = time.time()
-        self.idle_timeout = 3.0  # Seconds of no motion to switch to IDLE
         
         # Safety
         self.last_warning_time = 0.0
         self.warning_cooldown = 2.0
         
-        # FPS Control
-        self.idle_process_interval = 10  # Process every 10th frame
-        self.active_process_interval = 30   # Process every 15th frame (lower frequency to reduce GPU load)
+        # FPS Control (always active, process every 30 frames)
+        self.process_interval = 30
 
     def _ensure_depth_analyzer(self) -> DepthAnalyzer:
         if self.depth_analyzer is None:
             self.depth_analyzer = DepthAnalyzer()
         return self.depth_analyzer
 
-    def _detect_motion(self, frame: np.ndarray) -> bool:
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        gray = cv2.GaussianBlur(gray, (21, 21), 0)
-        
-        if self.prev_gray_frame is None:
-            self.prev_gray_frame = gray
-            return False
-            
-        frame_delta = cv2.absdiff(self.prev_gray_frame, gray)
-        thresh = cv2.threshold(frame_delta, 25, 255, cv2.THRESH_BINARY)[1]
-        
-        # Count non-zero pixels
-        changed_pixels = cv2.countNonZero(thresh)
-        total_pixels = frame.shape[0] * frame.shape[1]
-        change_ratio = changed_pixels / total_pixels
-        
-        self.prev_gray_frame = gray
-        
-        # If more than 1% of the screen changed, it's motion
-        return change_ratio > 0.01
-
     def process_frame(self, frame: np.ndarray) -> Tuple[np.ndarray, List[str], List[str]]:
         """
-        Process frame based on state.
+        Process frame - always active walking mode.
         Returns: display_frame, info_lines, speech_messages
         """
         self.frame_counter += 1
@@ -83,20 +48,8 @@ class GuardianMode:
         speech_messages = []
         display_frame = frame.copy()
 
-        # 1. Motion Detection (Always run to switch states)
-        is_moving = self._detect_motion(frame)
-        
-        if is_moving:
-            self.last_motion_time = now
-            if self.current_state == self.STATE_IDLE:
-                self.current_state = self.STATE_ACTIVE
-        else:
-            if self.current_state == self.STATE_ACTIVE and (now - self.last_motion_time > self.idle_timeout):
-                self.current_state = self.STATE_IDLE
-
-        # 2. Determine if we should process depth
-        interval = self.active_process_interval if self.current_state == self.STATE_ACTIVE else self.idle_process_interval
-        should_process = (self.frame_counter % interval) == 0
+        # Process depth every N frames
+        should_process = (self.frame_counter % self.process_interval) == 0
 
         if should_process:
             try:
@@ -131,14 +84,13 @@ class GuardianMode:
                 logger.error(f"Depth processing failed: {e}")
                 info_lines.append("Depth Error")
 
-        info_lines.append(f"State: {self.current_state}")
+        info_lines.append("Walking Mode")
         
         return display_frame, info_lines, speech_messages
 
     def on_enter(self):
         self.frame_counter = 0
-        self.current_state = self.STATE_IDLE
-        logger.info("Entering Guardian Mode")
+        logger.info("Entering Walking Mode (Guardian)")
 
     def on_exit(self):
-        logger.info("Exiting Guardian Mode")
+        logger.info("Exiting Walking Mode (Guardian)")

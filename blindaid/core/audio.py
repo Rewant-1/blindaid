@@ -1,8 +1,10 @@
 """
 Audio utilities for text-to-speech and audio feedback.
 """
-import logging
 import os
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'  # Must be set before pygame import
+
+import logging
 import tempfile
 import time
 from queue import Queue, Empty
@@ -16,9 +18,8 @@ shutdown_event = Event()
 
 class AudioPlayer:
     """Thread-safe audio player that uses Google TTS (gTTS) + pygame for playback.
-
-    We intentionally removed pyttsx3 to avoid SAPI driver problems on Windows and
-    force use of online gTTS as requested.
+    
+    Uses online TTS exclusively for consistent, reliable audio output.
     """
 
     def __init__(self, rate: int = 150, volume: float = 0.9, use_online: bool = False):

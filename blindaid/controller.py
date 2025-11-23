@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 import time
+import threading
 from dataclasses import dataclass
 from typing import Callable, Dict, List, Optional, Sequence
 
@@ -51,15 +52,16 @@ class ModeController:
         self.audio_player: Optional[AudioPlayer] = None
         if self.audio_enabled:
             try:
-                # Respect configuration: allow forcing online TTS if pyttsx3/SAPI is unreliable
+                # Always use online TTS (gTTS) as configured
                 self.audio_player = AudioPlayer(
-                    rate=config.TTS_RATE, volume=config.TTS_VOLUME, use_online=getattr(config, 'TTS_FORCE_ONLINE', False)
+                    rate=config.TTS_RATE, volume=config.TTS_VOLUME, use_online=getattr(config, 'TTS_FORCE_ONLINE', True)
                 )
             except Exception as exc:  # noqa: BLE001
                 logger.warning("Audio player initialization failed: %s", exc)
                 self.audio_player = None
 
         self._mode_factories: Dict[str, Callable[[], object]] = {
+            "sitting": lambda: None,  # Default idle mode - no processing
             "guardian": lambda: GuardianMode(audio_enabled=self.audio_enabled),
             "reading": lambda: ReadingMode(
                 audio_enabled=self.audio_enabled,
@@ -69,16 +71,17 @@ class ModeController:
         }
         self._mode_instances: Dict[str, object] = {}
         self.mode_labels: Dict[str, str] = {
-            "guardian": "Guardian (Safety)",
-            "reading": "Reader (Text)",
-            "people": "People Scanner",
+            "sitting": "Sitting (Idle)",
+            "guardian": "Walking",
+            "reading": "Reading",
+            "people": "People",
         }
         
-        # Default to guardian if not specified or unknown
-        requested_mode = (initial_mode or "guardian").lower()
+        # Default to sitting mode if not specified or unknown
+        requested_mode = (initial_mode or "sitting").lower()
         if requested_mode not in self._mode_factories:
-            logger.warning("Unknown initial mode '%s', defaulting to guardian", requested_mode)
-            requested_mode = "guardian"
+            logger.warning("Unknown initial mode '%s', defaulting to sitting", requested_mode)
+            requested_mode = "sitting"
             
         self.current_mode_key = requested_mode
         self.previous_mode_key = requested_mode
@@ -91,8 +94,60 @@ class ModeController:
         self.fps_counter = 0
         self.fps_last_time = time.time()
         self.fps_value = 0.0
+        
+        # Background model preloader
+        self._preload_thread: Optional[threading.Thread] = None
+        self._preload_running = False
 
     # ------------------------------------------------------------------
+    def _start_background_preload(self) -> None:
+        """Start background thread to preload models gradually."""
+        if self._preload_running:
+            return
+        
+        def preload_worker():
+            """Gradually preload models in background without blocking main thread."""
+            try:
+                logger.info("Background preload started")
+                time.sleep(2)  # Let the app start first
+                
+                # Preload in order of likely usage
+                preload_order = ["guardian", "reading", "people"]
+                
+                for mode_key in preload_order:
+                    if not self._preload_running:
+                        break
+                    try:
+                        logger.info(f"Preloading {mode_key} mode...")
+                        mode = self._get_mode(mode_key)
+                        # Call _ensure_loaded if available to trigger model loading
+                        if hasattr(mode, '_ensure_loaded'):
+                            mode._ensure_loaded()
+                        elif hasattr(mode, '_ensure_ocr'):
+                            mode._ensure_ocr()
+                        time.sleep(1)  # Pause between loads to keep UI responsive
+                    except Exception as e:
+                        logger.debug(f"Preload failed for {mode_key}: {e}")
+                
+                # Preload visual assistant for caption/VQA
+                if self._preload_running:
+                    try:
+                        logger.info("Preloading visual assistant...")
+                        if self.visual_assistant is None:
+                            self.visual_assistant = VisualAssistant(device=getattr(config, 'CAPTION_DEVICE', 'cpu'))
+                        # Trigger lazy load of caption model (more commonly used)
+                        self.visual_assistant._ensure_caption_model()
+                    except Exception as e:
+                        logger.debug(f"Preload failed for visual assistant: {e}")
+                
+                logger.info("Background preload complete")
+            except Exception as e:
+                logger.error(f"Background preload error: {e}")
+        
+        self._preload_running = True
+        self._preload_thread = threading.Thread(target=preload_worker, daemon=True)
+        self._preload_thread.start()
+    
     def _get_mode(self, key: str) -> object:
         factory = self._mode_factories.get(key)
         if factory is None:
@@ -233,27 +288,27 @@ class ModeController:
 
     def _draw_overlay_text(self, frame, info_lines: Sequence[str], extra_lines: Sequence[str]) -> None:
         h, w = frame.shape[:2]
-        header_y = 30
+        header_y = 20
         mode_label = self.mode_labels.get(self.current_mode_key, self.current_mode_key)
         cv2.putText(
             frame,
-            f"Mode: {mode_label}",
-            (10, header_y),
+            f"M:{mode_label}",
+            (5, header_y),
             cv2.FONT_HERSHEY_SIMPLEX,
-            0.7,
+            0.4,
             (0, 255, 255),
-            2,
+            1,
         )
 
-        fps_text = f"FPS: {self.fps_value:.1f}" if self.fps_value else "FPS: --"
+        fps_text = f"FPS:{self.fps_value:.0f}" if self.fps_value else "FPS:--"
         cv2.putText(
             frame,
             fps_text,
-            (w - 140, 30),
+            (w - 60, header_y),
             cv2.FONT_HERSHEY_SIMPLEX,
-            0.6,
+            0.4,
             (0, 255, 0),
-            2,
+            1,
         )
 
         lines_to_draw: List[str] = list(info_lines)
@@ -261,30 +316,30 @@ class ModeController:
             lines_to_draw.append(overlay)
 
         # Draw the static hint text at the very bottom
-        bottom_y = h - 10
+        bottom_y = h - 5
         cv2.putText(
             frame,
             config.SCENE_HINT_TEXT,
-            (10, bottom_y),
+            (5, bottom_y),
             cv2.FONT_HERSHEY_SIMPLEX,
-            0.5,
+            0.35,
             (200, 200, 200),
             1,
         )
 
         # Draw dynamic messages above the hint text
-        bottom_y -= 25
+        bottom_y -= 18
         for line in reversed(lines_to_draw[-6:]):  # limit clutter
             cv2.putText(
                 frame,
                 line,
-                (10, bottom_y),
+                (5, bottom_y),
                 cv2.FONT_HERSHEY_SIMPLEX,
-                0.6,
+                0.4,
                 (255, 255, 255),
-                2,
+                1,
             )
-            bottom_y -= 22
+            bottom_y -= 16
 
     # ------------------------------------------------------------------
     def run(self) -> None:
@@ -300,6 +355,9 @@ class ModeController:
             capture.set(cv2.CAP_PROP_FRAME_WIDTH, config.FRAME_WIDTH)
         if config.FRAME_HEIGHT:
             capture.set(cv2.CAP_PROP_FRAME_HEIGHT, config.FRAME_HEIGHT)
+        
+        # Start background model preloading for smooth mode switching
+        self._start_background_preload()
 
         initial_mode = self._get_mode(self.current_mode_key)
         if hasattr(initial_mode, "on_enter"):
@@ -308,8 +366,8 @@ class ModeController:
             except Exception as exc:  # noqa: BLE001
                 logger.debug("Initial on_enter failed: %s", exc)
 
-        self._add_overlay("System Ready. Guardian Mode Active.", duration=3.0)
-        self._speak_messages(["BlindAid Online. Battery Check OK. Ready."])
+        self._add_overlay("System Ready. Sitting Mode.", duration=3.0)
+        self._speak_messages(["BlindAid Online. Ready."])
 
         try:
             while True:
@@ -330,12 +388,13 @@ class ModeController:
                 speech_messages: List[str]
 
                 # Polymorphic call - all modes should implement process_frame
-                if hasattr(current_mode, "process_frame"):
-                    display_frame, info_lines, speech_messages = current_mode.process_frame(frame)
-                else:
+                if current_mode is None or not hasattr(current_mode, "process_frame"):
+                    # Sitting mode - no processing, just show camera feed
                     display_frame = frame.copy()
-                    info_lines = []
+                    info_lines = ["Sitting Mode - Press 1-5 for features"]
                     speech_messages = []
+                else:
+                    display_frame, info_lines, speech_messages = current_mode.process_frame(frame)
 
                 self._speak_messages(speech_messages)
 
@@ -350,26 +409,33 @@ class ModeController:
                     logger.info("Quit requested by user")
                     break
                 
-                # Key Bindings
-                if key == ord("1"):
-                    self._switch_mode("guardian")
+                # Key Bindings (0-5 for modes)
+                if key == ord("0"):
+                    self._switch_mode("sitting")  # Default idle mode
+                elif key == ord("1"):
+                    self._switch_mode("guardian")  # Walking mode
                 elif key == ord("2"):
                     self._switch_mode("reading")
-                elif key == 32: # Space
-                    self._handle_caption_request(frame)
-                elif key in (ord("v"), ord("V")):
+                elif key == ord("3"):
+                    if self.current_mode_key != "people":
+                        self.previous_mode_key = self.current_mode_key
+                        self._switch_mode("people")
+                elif key == ord("4"):
                     self._handle_vqa_request(frame)
+                elif key == ord("5"):
+                    self._handle_caption_request(frame)
                 elif key in (ord("t"), ord("T")):
                     # Quick TTS test to validate audio at runtime
                     self._add_overlay("TTS Test", duration=2.0)
                     self._speak_messages(["Audio check one two three."])
-                elif key in (ord("p"), ord("P")):
-                    if self.current_mode_key != "people":
-                        self.previous_mode_key = self.current_mode_key
-                        self._switch_mode("people")
 
             logger.info("Controller loop exited")
         finally:
+            # Stop background preloader
+            self._preload_running = False
+            if self._preload_thread and self._preload_thread.is_alive():
+                self._preload_thread.join(timeout=1.0)
+            
             capture.release()
             cv2.destroyAllWindows()
             for mode in self._mode_instances.values():

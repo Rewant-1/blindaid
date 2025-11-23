@@ -37,6 +37,20 @@ class ReadingMode:
             return self.ocr
 
         try:
+            import os
+            import sys
+            import warnings
+            # Suppress PaddleOCR startup warnings and output
+            os.environ['FLAGS_allocator_strategy'] = 'auto_growth'
+            os.environ['GLOG_minloglevel'] = '2'
+            warnings.filterwarnings('ignore', category=Warning)
+            
+            # Temporarily suppress stdout/stderr during PaddleOCR import
+            old_stdout = sys.stdout
+            old_stderr = sys.stderr
+            sys.stdout = open(os.devnull, 'w')
+            sys.stderr = open(os.devnull, 'w')
+            
             from paddleocr import PaddleOCR  # Local import to defer heavy dependency cost
 
             logger.info("Lazy-loading PaddleOCR for reading mode")
@@ -47,8 +61,23 @@ class ReadingMode:
                 text_det_limit_side_len=640,
                 
             )
+            
+            # Restore stdout/stderr
+            sys.stdout.close()
+            sys.stderr.close()
+            sys.stdout = old_stdout
+            sys.stderr = old_stderr
+            
             logger.info("PaddleOCR ready")
         except Exception as exc:  # noqa: BLE001
+            # Ensure streams are restored even on error
+            try:
+                sys.stdout.close()
+                sys.stderr.close()
+            except:
+                pass
+            sys.stdout = old_stdout
+            sys.stderr = old_stderr
             self._ocr_failed = True
             logger.error("Failed to initialize PaddleOCR: %s", exc)
         return self.ocr
@@ -108,20 +137,7 @@ class ReadingMode:
         info_lines: List[str] = []
         speech: List[str] = []
 
-        # Draw previous boxes by default
-        for text, score, box in self.last_text_data:
-            color = (0, 255, 0) if score >= self.confidence_threshold else (0, 255, 255)
-            cv2.polylines(display, [box], True, color, 2)
-            x, y = box[0]
-            cv2.putText(
-                display,
-                f"{text} ({score:.2f})",
-                (int(x), int(y) - 10),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                0.6,
-                (255, 0, 0),
-                2,
-            )
+        # No box drawing - cleaner UI as requested
 
         self.frame_count += 1
         should_run = (self.frame_count % (self.skip + 1)) == 0

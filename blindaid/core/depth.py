@@ -23,6 +23,11 @@ class DepthAnalyzer:
         if self.processor is not None and self.model is not None:
             return
         try:
+            import os
+            import warnings
+            # Suppress transformers warnings
+            os.environ['TRANSFORMERS_VERBOSITY'] = 'error'
+            warnings.filterwarnings('ignore', category=FutureWarning)
             import torch  # pylint: disable=import-error
             from transformers import (  # pylint: disable=import-error
                 DPTForDepthEstimation,

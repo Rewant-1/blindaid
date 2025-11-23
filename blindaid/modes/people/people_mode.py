@@ -39,9 +39,15 @@ class PeopleMode:
     def _ensure_loaded(self):
         if self._loaded:
             return
+        import os
+        import warnings
+        # Suppress YOLO and face_recognition verbose output
+        os.environ['YOLO_VERBOSE'] = 'False'
+        warnings.filterwarnings('ignore', category=UserWarning)
+        warnings.filterwarnings('ignore', category=FutureWarning)
         try:
             logger.info("Loading face detection models...")
-            self.face_detector = YOLO(str(config.FACE_RECOGNITION_MODEL))
+            self.face_detector = YOLO(str(config.FACE_RECOGNITION_MODEL), verbose=False)
             self._load_known_faces(config.KNOWN_FACES_DIR)
             self._loaded = True
         except Exception as e:
@@ -103,20 +109,18 @@ class PeopleMode:
         now = time.time()
         if now - self.start_time > self.duration:
             self.finished = True
-            # Summarize results
+            # Summarize results - only speak about known people
             if self.detected_people:
                 names = list(self.detected_people)
-                # Format: "Rewant and unknown person"
-                unknown_count = names.count("Unknown")
                 known_names = [n for n in names if n != "Unknown"]
                 
-                summary_parts = known_names[:]
-                if unknown_count > 0:
-                    summary_parts.append(f"{unknown_count} unknown person{'s' if unknown_count > 1 else ''}")
-                
-                summary = "I see " + " and ".join(summary_parts)
-                speech_messages.append(summary)
-                info_lines.append(summary)
+                if known_names:
+                    summary = "I see " + " and ".join(known_names)
+                    speech_messages.append(summary)
+                    info_lines.append(summary)
+                else:
+                    speech_messages.append("No one recognized.")
+                    info_lines.append("No one recognized.")
             else:
                 speech_messages.append("No one found.")
                 info_lines.append("No one found.")
