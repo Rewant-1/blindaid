@@ -55,7 +55,11 @@ class VisualAssistant:
         from transformers import BlipForConditionalGeneration, BlipProcessor
 
         self.processor = BlipProcessor.from_pretrained("Salesforce/blip-image-captioning-base")
-        self.model = BlipForConditionalGeneration.from_pretrained("Salesforce/blip-image-captioning-base").to(self.device)
+        # FIX: Added low_cpu_mem_usage=False to prevent meta tensor errors
+        self.model = BlipForConditionalGeneration.from_pretrained(
+            "Salesforce/blip-image-captioning-base", 
+            low_cpu_mem_usage=False
+        ).to(self.device)
         self.model.eval()
 
     def _ensure_vqa_model(self) -> None:
@@ -69,7 +73,11 @@ class VisualAssistant:
         from transformers import BlipForQuestionAnswering, BlipProcessor
 
         self.vqa_processor = BlipProcessor.from_pretrained("Salesforce/blip-vqa-base")
-        self.vqa_model = BlipForQuestionAnswering.from_pretrained("Salesforce/blip-vqa-base").to(self.device)
+        # FIX: Added low_cpu_mem_usage=False to prevent meta tensor errors
+        self.vqa_model = BlipForQuestionAnswering.from_pretrained(
+            "Salesforce/blip-vqa-base", 
+            low_cpu_mem_usage=False
+        ).to(self.device)
         self.vqa_model.eval()
 
     def generate_caption(self, frame) -> str:
