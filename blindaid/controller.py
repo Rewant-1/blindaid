@@ -1,4 +1,4 @@
-"""Keyboard-driven controller that switches between BlindAid modes."""
+"""Main controller - handles mode switching and input."""
 from __future__ import annotations
 
 import logging
@@ -30,6 +30,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class OverlayMessage:
+    """temp message to show on screen"""
     text: str
     expires_at: float
 

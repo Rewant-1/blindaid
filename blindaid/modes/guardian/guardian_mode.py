@@ -1,4 +1,4 @@
-"""Guardian Mode: Smart Navigation with Direction & Distance."""
+"""Navigation mode - warns about obstacles using depth."""
 from __future__ import annotations
 import time
 import logging

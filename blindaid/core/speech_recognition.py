@@ -1,4 +1,4 @@
-"""Thin wrapper around SpeechRecognition for voice commands."""
+"""Voice input using Google Speech API."""
 import logging
 from typing import Optional
 

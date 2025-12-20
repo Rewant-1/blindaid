@@ -1,4 +1,4 @@
-"""Reading mode driven by PaddleOCR."""
+"""OCR mode using PaddleOCR."""
 from __future__ import annotations
 
 import logging

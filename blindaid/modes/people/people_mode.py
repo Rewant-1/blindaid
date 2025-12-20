@@ -1,4 +1,4 @@
-"""One-shot face scan mode."""
+"""Face recognition mode."""
 from __future__ import annotations
 
 import logging

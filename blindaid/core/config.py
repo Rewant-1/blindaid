@@ -1,6 +1,4 @@
-"""
-Configuration management for BlindAid system.
-"""
+"""Config values."""
 import os
 from pathlib import Path
 

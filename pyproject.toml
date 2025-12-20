@@ -9,7 +9,7 @@ description = "Multi-modal assistive technology stack that fuses object detectio
 readme = "README.md"
 requires-python = ">=3.9"
 authors = [
-    { name = "BlindAid Contributors" }
+    { name = "Rewant" }
 ]
 license = { text = "Proprietary" }
 classifiers = [
@@ -43,29 +43,6 @@ dependencies = [
     "pandas>=2.0.0"
 ]
 
-[project.optional-dependencies]
-advanced = [
-    "torch>=2.0.0",
-    "torchvision>=0.15.0",
-    "transformers>=4.30.0"
-]
-dev = [
-    "black>=24.3.0",
-    "ruff>=0.5.0",
-    "pytest>=7.4.0",
-    "mypy>=1.7.0",
-    "types-Pillow>=10.0.0.0",
-    "types-requests>=2.31.0.10"
-]
-full = [
-    "torch>=2.0.0",
-    "torchvision>=0.15.0",
-    "transformers>=4.30.0"
-]
-
-[project.scripts]
-blindaid = "blindaid.app:main"
-
 [project.urls]
 Homepage = "https://github.com/Rewant-1/blindaid"
 Issues = "https://github.com/Rewant-1/blindaid/issues"
@@ -74,15 +51,3 @@ Issues = "https://github.com/Rewant-1/blindaid/issues"
 where = ["."]
 include = ["blindaid*"]
 
-[tool.black]
-line-length = 100
-target-version = ["py39"]
-
-[tool.ruff]
-line-length = 100
-select = ["E", "F", "B", "I", "W", "C90"]
-ignore = ["E501"]
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-addopts = "-ra"

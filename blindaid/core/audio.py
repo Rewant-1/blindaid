@@ -1,4 +1,4 @@
-"""Text-to-speech helper built around gTTS and pygame."""
+"""TTS using gTTS + pygame. pyttsx3 was crashing so switched to this."""
 from __future__ import annotations
 
 import logging
@@ -14,7 +14,7 @@ os.environ.setdefault("PYGAME_HIDE_SUPPORT_PROMPT", "1")
 logger = logging.getLogger(__name__)
 
 class AudioPlayer:
-    """Thread-safe audio player that always uses the online TTS backend."""
+    """Plays TTS in background thread so video doesnt freeze."""
 
     def __init__(self, rate: int = 150, volume: float = 0.9, use_online: bool = False):
         self.rate = rate

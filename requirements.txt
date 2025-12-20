@@ -3,7 +3,7 @@ opencv-python
 Pillow
 ultralytics
 paddleocr
-paddlepaddle-gpu  # Agar GPU use kar raha hai (ya paddlepaddle for CPU)
+paddlepaddle-gpu
 face-recognition
 dlib
 pyttsx3

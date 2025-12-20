@@ -1,4 +1,4 @@
-"""Command-line entry point for the BlindAid controller."""
+"""CLI entry point."""
 import argparse
 import logging
 import signal

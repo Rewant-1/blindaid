@@ -1,4 +1,4 @@
-"""Caption and VQA helpers built on BLIP models."""
+"""BLIP captioning + VQA. Lazy loads because models are huge."""
 from __future__ import annotations
 
 import logging
@@ -55,7 +55,7 @@ class VisualAssistant:
         from transformers import BlipForConditionalGeneration, BlipProcessor
 
         self.processor = BlipProcessor.from_pretrained("Salesforce/blip-image-captioning-base")
-        # FIX: Added low_cpu_mem_usage=False to prevent meta tensor errors
+        # low_cpu_mem_usage was causing issues on my laptop
         self.model = BlipForConditionalGeneration.from_pretrained(
             "Salesforce/blip-image-captioning-base", 
             low_cpu_mem_usage=False
@@ -73,7 +73,7 @@ class VisualAssistant:
         from transformers import BlipForQuestionAnswering, BlipProcessor
 
         self.vqa_processor = BlipProcessor.from_pretrained("Salesforce/blip-vqa-base")
-        # FIX: Added low_cpu_mem_usage=False to prevent meta tensor errors
+        # same fix as above
         self.vqa_model = BlipForQuestionAnswering.from_pretrained(
             "Salesforce/blip-vqa-base", 
             low_cpu_mem_usage=False

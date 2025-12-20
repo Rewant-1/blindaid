@@ -1,4 +1,4 @@
-"""Lightweight wrapper around the MiDaS depth model."""
+"""MiDaS depth estimation. Used for obstacle detection."""
 from __future__ import annotations
 
 import logging
