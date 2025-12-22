@@ -92,6 +92,7 @@ class ModeController:
         self.fps_counter = 0
         self.fps_last_time = time.time()
         self.fps_value = 0.0
+        self._lock = threading.Lock()
 
         self._preload_thread: Optional[threading.Thread] = None
         self._preload_running = False
@@ -140,13 +141,14 @@ class ModeController:
         self._preload_thread.start()
     
     def _get_mode(self, key: str) -> object:
-        factory = self._mode_factories.get(key)
-        if factory is None:
-            raise KeyError(key)
-        if key not in self._mode_instances:
-            logger.info("Lazy-loading %s mode", key)
-            self._mode_instances[key] = factory()
-        return self._mode_instances[key]
+        with self._lock:
+            factory = self._mode_factories.get(key)
+            if factory is None:
+                raise KeyError(key)
+            if key not in self._mode_instances:
+                logger.info("Lazy-loading %s mode", key)
+                self._mode_instances[key] = factory()
+            return self._mode_instances[key]
 
     def _switch_mode(self, target_key: str) -> None:
         if target_key == self.current_mode_key:

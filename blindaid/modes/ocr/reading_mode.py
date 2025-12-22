@@ -45,7 +45,9 @@ class ReadingMode:
 
             with open(os.devnull, "w", encoding="utf-8") as sink, redirect_stdout(sink), redirect_stderr(sink):
                 logger.info("Loading PaddleOCR (%s)", self.language)
-                self.ocr = PaddleOCR(lang=self.language, use_angle_cls=True, text_det_limit_side_len=640)
+                # show_log=False is must, otherwise console fills up with junk
+                self.ocr = PaddleOCR(lang=self.language, use_angle_cls=True, 
+                                   text_det_limit_side_len=640, show_log=False)
         except Exception as exc:  # noqa: BLE001
             self._ocr_failed = True
             logger.error("Failed to initialise PaddleOCR: %s", exc)

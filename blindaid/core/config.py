@@ -14,14 +14,15 @@ DEFAULT_CAMERA_INDEX = 0
 # Object Detection settings
 OBJECT_DETECTION_MODEL = MODELS_DIR / "object_blind_aide.onnx"
 OBJECT_DETECTION_CONFIDENCE = 0.6
-OBJECT_DETECTION_FRAME_SKIP = 3
+# Object Detection skipping - making it higher to keep FPS stable
+OBJECT_DETECTION_FRAME_SKIP = 8
 SCENE_PROCESS_EVERY = 1
 
-# OCR settings
+# OCR Settings - Paddle is heavy so skipping more frames
 OCR_LANGUAGE = 'en'
 OCR_CONFIDENCE_THRESHOLD = 0.95
 OCR_COOLDOWN_SECONDS = 5
-OCR_FRAME_SKIP = 4
+OCR_FRAME_SKIP = 12
 
 # Face Recognition settings
 FACE_RECOGNITION_MODEL = MODELS_DIR / "yolov9t-face-lindevs.pt"
