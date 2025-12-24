@@ -1,7 +1,16 @@
+<div align="center">
+
 ![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
 ![PyTorch](https://img.shields.io/badge/PyTorch-%23EE4C2C.svg?style=for-the-badge&logo=PyTorch&logoColor=white)
 ![OpenCV](https://img.shields.io/badge/opencv-%23white.svg?style=for-the-badge&logo=opencv&logoColor=white)
+![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Transformers-yellow?style=for-the-badge)
 
+![PaddlePaddle](https://img.shields.io/badge/PaddlePaddle-2932e1?style=for-the-badge&logo=PaddlePaddle&logoColor=white)
+![Ultralytics](https://img.shields.io/badge/YOLO-%23101827.svg?style=for-the-badge&logo=yolo&logoColor=white)
+![NumPy](https://img.shields.io/badge/numpy-%23013243.svg?style=for-the-badge&logo=numpy&logoColor=white)
+![Pygame](https://img.shields.io/badge/pygame-%23EDD400.svg?style=for-the-badge&logo=pygame&logoColor=white)
+
+</div>
 # BlindAid
 
 Real-time assistive vision system for visually impaired users.
