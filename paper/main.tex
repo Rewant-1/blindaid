@@ -109,13 +109,19 @@ Na\"{\i}ve solutions such as fixed-rate subsampling (e.g., processing every
 regardless of whether the user is approaching a staircase or standing still
 in an open room.
 
-This paper makes three contributions:
+This paper makes four contributions:
 \begin{enumerate}
   \item \textbf{Adaptive Frame Processing (AFP)}, a heuristic algorithm
     that dynamically adjusts frame skip rates based on obstacle proximity
     and scene stability, using the previous frame's depth map to resolve
     the chicken-and-egg dependency between skip decisions and depth
     computation.
+  \item \textbf{Depth--detection fusion with a scene state engine} that
+    combines monocular depth maps with object bounding boxes to produce
+    distance-aware detections (e.g., ``person ahead, about 2~meters''),
+    and tracks objects across frames using IoU matching to generate
+    event-based speech---announcing only \emph{new}, \emph{approaching},
+    or \emph{collision-risk} objects instead of repeating every detection.
   \item \textbf{Template-based spatial captioning}, which replaces
     heavyweight vision-language models with a deterministic pipeline of
     YOLO detection followed by spatial natural language generation,
@@ -218,23 +224,67 @@ Runtime~\cite{onnxruntime2019} on CPU, with no GPU requirements.  Fig.~\ref{fig:
 
 \subsection{Guardian Mode (Navigation)}
 
-Guardian Mode provides real-time navigation assistance through three
-components executed in sequence:
+Guardian Mode implements a \emph{layered perception stack} executed in
+sequence on each processed frame:
 
 \begin{enumerate}
-  \item \textbf{Depth estimation} via MiDaS-Small~\cite{ranftl2020midas}
-    (ONNX, 63.7\,MB), producing a dense depth map at 22.8\,ms median
-    latency.
-  \item \textbf{Object detection} via YOLOv8-Nano~\cite{jocher2023yolov8}
-    (ONNX, 12.3\,MB), identifying obstacles, vehicles, people, and other
-    navigational hazards at 30.0\,ms median latency.
-  \item \textbf{Template-based captioning} via spatial natural language
-    generation, producing navigation-oriented scene descriptions at
-    31.0\,ms median latency.
+  \item \textbf{Perception Layer}: MiDaS-Small~\cite{ranftl2020midas}
+    (depth, 22.8\,ms) and YOLOv8-Nano~\cite{jocher2023yolov8}
+    (detection, 30.0\,ms) run in parallel.
+  \item \textbf{Fusion Layer}: Each YOLO bounding box is enriched with the
+    median depth value from MiDaS within that box, producing distance
+    categories (very close, close, nearby, moderate, far).
+  \item \textbf{Scene State Layer}: Fused detections are matched to tracked
+    objects via IoU.  Only \emph{new}, \emph{approaching}, or
+    \emph{collision-risk} events generate speech output.
+  \item \textbf{Speech Layer}: Events are prioritized (collision warnings
+    first) and converted to concise natural language.
 \end{enumerate}
 
-The combined pipeline processes a single frame in 87.4\,ms (median),
-enabling approximately 11 frames per second if every frame is processed.
+The fusion and scene state layers add only 2.6\,ms of overhead (3.2\%),
+while fundamentally changing the system's output from raw detection spam
+(``person, person, person'') to contextual alerts
+(``new person ahead, about 2~meters'').
+
+The combined pipeline processes a single frame in $\sim$80\,ms (median),
+enabling approximately 12 frames per second if every frame is processed.
+
+\subsection{Depth--Detection Fusion}
+\label{sec:depth_fusion}
+
+For each YOLO detection with bounding box $(x_1, y_1, x_2, y_2)$, the
+fusion module extracts the corresponding region from the MiDaS depth
+map and computes the median depth value:
+\begin{equation}
+  d_\text{obj} = \text{median}\bigl(D[y_1:y_2,\, x_1:x_2]\bigr)
+  \label{eq:depth_fusion}
+\end{equation}
+where $D$ is the normalized depth map ($0$--$1$, higher = closer).
+Using the median rather than the mean provides robustness to background
+pixels at the edges of bounding boxes.  The depth value is then mapped to
+a distance category via empirically determined thresholds.
+
+\subsection{Scene State Engine}
+\label{sec:scene_state}
+
+The scene state engine maintains a set of tracked objects across frames,
+using IoU-based matching (threshold 0.3) between consecutive processed
+frames.  This is deliberately simpler than multi-object tracking frameworks
+such as ByteTrack~\cite{zhang2022bytetrack} to preserve explainability and
+minimize overhead.
+
+Speech events are generated only for four conditions:
+\begin{itemize}
+  \item \textbf{New object}: Detection not matched to any existing track.
+  \item \textbf{Approaching}: Tracked object's distance category moves
+    closer (e.g., ``moderate'' $\to$ ``nearby'').
+  \item \textbf{Collision risk}: Object classified as ``very close'' or
+    ``close'' \emph{and} approaching.
+  \item \textbf{Path clear}: All tracked obstacles have departed.
+\end{itemize}
+
+A cooldown timer (default: 3\,s) prevents re-announcing the same object,
+and events are prioritized (collision = 0, new/approach = 1, info = 2).
 
 \subsection{Reading Mode}
 
@@ -504,22 +554,28 @@ likely due to variable text density across frames.
 
 \subsection{Full Pipeline Performance}
 
-In Guardian Mode with AFP enabled, the full pipeline achieves the following
-per-frame timings over 100 frames:
+In Guardian Mode with AFP enabled, the full pipeline (including depth
+fusion and scene state engine) achieves the following per-frame timings
+over 100 frames:
 
 \begin{itemize}
-  \item \textbf{Processed frame}: 87.4\,ms (depth + detection + captioning)
+  \item \textbf{Processed frame}: 80.1\,ms (depth + detection + fusion +
+    scene state)
+  \item \textbf{Fusion + scene state overhead}: 2.6\,ms (3.2\% of total)
   \item \textbf{Skipped frame}: 0.001\,ms (cached result return)
   \item \textbf{AFP skip ratio}: 81\%
 \end{itemize}
+
+The fusion and scene state layers are essentially free: 2.6\,ms overhead
+for distance-aware, event-based output versus raw detection output.
 
 The effective per-frame cost, amortized over all frames, is:
 \begin{equation}
   \bar{t} = (1 - r) \cdot t_\text{proc} + r \cdot t_\text{skip}
   \label{eq:amortized}
 \end{equation}
-where $r = 0.81$ is the skip ratio, $t_\text{proc} = 87.4$\,ms, and
-$t_\text{skip} \approx 0$\,ms, yielding $\bar{t} \approx 16.6$\,ms
+where $r = 0.81$ is the skip ratio, $t_\text{proc} = 80.1$\,ms, and
+$t_\text{skip} \approx 0$\,ms, yielding $\bar{t} \approx 15.2$\,ms
 amortized per frame---well within real-time budget at 30\,fps (33\,ms
 per frame).
 
@@ -581,24 +637,35 @@ advantageous for text-to-speech delivery.
 % TODO: Add perceptual quality comparison (user study or BLEU/METEOR
 % scores against ground-truth navigation instructions) when available.
 
-\subsection{AFP Unit Test Validation}
+\subsection{Unit Test Validation}
 
 To ensure correctness, we validate AFP behavior through six unit tests
-covering boundary conditions and expected adaptive behavior:
+and scene intelligence through eight additional unit tests:
 
+\textbf{AFP tests (6/6 pass):}
 \begin{enumerate}
   \item Close obstacle ($d < \tau_p$) yields minimum skip count ($s = 2$).
   \item Far obstacle ($d \gg \tau_p$) yields elevated skip count ($s = 11$).
-  \item Stable scene (high histogram correlation) increases skip count
-    toward $s_\text{max}$.
+  \item Stable scene (high histogram correlation) increases skip count.
   \item Changing scene (low histogram correlation) decreases skip count.
   \item The first frame is always processed (no skip on initialization).
-  \item Skip values remain within mode-specific bounds
-    $[s_\text{min}, s_\text{max}]$.
+  \item Skip values remain within mode-specific bounds.
 \end{enumerate}
 
-All six tests pass, confirming that AFP produces non-hardcoded, input-dependent
-skip counts and correctly uses the previous frame's depth map.
+\textbf{Scene intelligence tests (8/8 pass):}
+\begin{enumerate}
+  \item Depth fusion produces correct distance categories.
+  \item Closer objects are sorted first (by raw depth).
+  \item Speech output includes distance information.
+  \item Same object across 10 frames generates \emph{one} announcement.
+  \item New object entering scene triggers announcement.
+  \item Approaching object triggers distance update.
+  \item Very close + approaching triggers collision warning (priority 0).
+  \item Scene state metrics are correctly accumulated.
+\end{enumerate}
+
+All 14 tests pass, confirming correct behavior of the adaptive scheduling,
+depth fusion, object tracking, and event-based speech generation.
 
 % =============================================================================
 % VI. DISCUSSION
