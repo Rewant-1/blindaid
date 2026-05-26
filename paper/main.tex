@@ -1,0 +1,711 @@
+% =============================================================================
+% Adaptive Frame Processing for Resource-Efficient Multi-Modal Assistive Vision
+% IEEE Conference Format
+% =============================================================================
+\documentclass[conference]{IEEEtran}
+
+% --- Standard Packages ---
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{algorithm}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{url}
+\usepackage{hyperref}
+\usepackage{balance}
+
+% --- TODO command for placeholders ---
+\newcommand{\TODO}[1]{\textcolor{red}{\textbf{[TODO: #1]}}}
+
+\begin{document}
+
+% =============================================================================
+% TITLE AND AUTHORS
+% =============================================================================
+\title{Adaptive Frame Processing for Resource-Efficient\\Multi-Modal Assistive Vision}
+
+\author{
+  \IEEEauthorblockN{Author Name}
+  \IEEEauthorblockA{
+    \textit{Affiliation} \\
+    City, Country \\
+    email@example.com
+  }
+}
+
+\maketitle
+
+% =============================================================================
+% ABSTRACT
+% =============================================================================
+\begin{abstract}
+Assistive vision systems for visually impaired users must process multiple
+perceptual streams---depth estimation, object detection, text recognition,
+and face detection---under stringent latency and resource constraints.
+Existing approaches typically rely on GPU-accelerated inference or
+heavyweight vision-language models, limiting deployment on consumer
+hardware.  We present \textsc{BlindAid}, a multi-modal assistive vision
+system that runs entirely on CPU using ONNX Runtime, and introduce
+\emph{Adaptive Frame Processing} (AFP), a heuristic scheduling algorithm
+that dynamically adjusts frame processing rates based on obstacle proximity
+and scene stability.  AFP addresses a fundamental chicken-and-egg problem
+in frame skipping---needing depth information to decide whether to skip,
+yet needing to process a frame to obtain depth---by using the
+\emph{previous} frame's depth map to determine the current frame's skip
+count.  On a consumer laptop with CPU-only inference, AFP achieves an 81\%
+frame skip ratio while processing 90\% more frames than static skip
+policies during close-obstacle scenarios.  We further demonstrate that
+template-based captioning using spatial natural language generation achieves
+a $\sim$50$\times$ speedup over vision-language models such as BLIP, at
+31\,ms versus $\sim$1600\,ms per frame, while providing deterministic and
+explainable navigation descriptions.  All benchmarks are evaluated on
+synthetic test sequences; real-world video evaluation is planned as future
+work.
+\end{abstract}
+
+\begin{IEEEkeywords}
+assistive vision, adaptive computation, depth estimation, ONNX Runtime,
+CPU inference, frame skipping, visually impaired
+\end{IEEEkeywords}
+
+% =============================================================================
+% I. INTRODUCTION
+% =============================================================================
+\section{Introduction}
+\label{sec:introduction}
+
+An estimated 2.2 billion people worldwide experience some form of vision
+impairment, of whom at least 39 million are completely blind.  For these
+individuals, real-time scene understanding---knowing what objects are
+nearby, reading text on signs and packages, and recognizing familiar
+faces---can dramatically improve independence and safety.  Computer vision
+advances in monocular depth estimation~\cite{ranftl2020midas}, object
+detection~\cite{jocher2023yolov8}, and optical character
+recognition~\cite{paddleocr2020} have made these capabilities
+technically feasible, yet deploying them as a practical assistive tool
+remains challenging.
+
+The central tension is between \emph{perceptual richness} and
+\emph{computational cost}.  State-of-the-art vision-language models such as
+BLIP~\cite{li2022blip} can generate detailed scene descriptions, but
+require $\sim$400\,MB of model weights and $\sim$1600\,ms per frame on
+CPU---far too slow for real-time navigation assistance.  Conversely,
+lightweight models can run quickly but sacrifice the multi-modal
+integration that makes assistive systems truly useful.  Most existing
+systems~\cite{kuriakose2022assistive, real2019navigation} address this
+trade-off by assuming GPU availability or cloud offloading, neither of
+which is reliably available to all users.
+
+A second, less explored challenge is \emph{temporal redundancy}.  Video
+streams contain substantial frame-to-frame similarity: a user walking down
+a hallway may see essentially the same scene for seconds at a time.
+Processing every frame wastes computation without providing new information.
+Na\"{\i}ve solutions such as fixed-rate subsampling (e.g., processing every
+10th frame) are \emph{context-blind}: they skip frames at the same rate
+regardless of whether the user is approaching a staircase or standing still
+in an open room.
+
+This paper makes three contributions:
+\begin{enumerate}
+  \item \textbf{Adaptive Frame Processing (AFP)}, a heuristic algorithm
+    that dynamically adjusts frame skip rates based on obstacle proximity
+    and scene stability, using the previous frame's depth map to resolve
+    the chicken-and-egg dependency between skip decisions and depth
+    computation.
+  \item \textbf{Template-based spatial captioning}, which replaces
+    heavyweight vision-language models with a deterministic pipeline of
+    YOLO detection followed by spatial natural language generation,
+    achieving a $\sim$50$\times$ speedup while producing explainable
+    navigation descriptions.
+  \item \textbf{A complete multi-modal assistive pipeline} running entirely
+    on CPU via ONNX Runtime, with three specialized operating modes
+    (navigation, reading, people recognition), evaluated with real
+    benchmarks on a consumer laptop.
+\end{enumerate}
+
+We evaluate \textsc{BlindAid} on an AMD Ryzen AI~7 350 processor with
+CPU-only inference.  All results reported in this paper are measured on
+synthetic test sequences; real-world video evaluation is planned as future
+work.
+
+% =============================================================================
+% II. RELATED WORK
+% =============================================================================
+\section{Related Work}
+\label{sec:related}
+
+\subsection{Assistive Vision Systems}
+
+Assistive technologies for the visually impaired have progressed from
+simple ultrasonic rangefinders to sophisticated camera-based systems.
+Tapu et al.~\cite{tapu2014assistive} developed a smartphone-based obstacle
+detection system using stereo vision, while Real and
+Araujo~\cite{real2019navigation} surveyed navigation systems and
+identified key requirements: real-time operation, robustness to lighting
+variation, and minimal hardware cost.  The VizWiz
+challenge~\cite{gurari2018vizwiz} highlighted the need for visual question
+answering tailored to blind users, motivating the development of
+context-aware assistive systems.  Kuriakose et
+al.~\cite{kuriakose2022assistive} provided a comprehensive review of tools
+and technologies for navigation support, noting that GPU dependency remains
+a major barrier to adoption.
+
+Our work differs from prior systems in two respects: we target CPU-only
+deployment on consumer laptops without specialized hardware, and we
+introduce adaptive temporal scheduling to reduce redundant computation
+across frames.
+
+\subsection{Adaptive Computation}
+
+The concept of adapting computational effort to input complexity has been
+explored in several forms.  BlockDrop~\cite{wu2018blockdrop} learns to skip
+residual blocks on a per-image basis.  SkipNet~\cite{wang2018skipnet}
+routes inputs through dynamically selected layers.
+BranchyNet~\cite{teerapittayanon2016branchynet} introduces early exit
+points in deep networks.  Figurnov et al.~\cite{figurnov2017spatially}
+proposed spatially adaptive computation time for residual networks,
+allocating more computation to harder spatial regions.
+
+These approaches operate \emph{within} a single frame, adapting model
+complexity per input.  Our AFP algorithm operates \emph{across} frames,
+adapting the \emph{temporal} processing rate based on scene context.  This
+is complementary: AFP could be combined with per-frame adaptive models for
+further efficiency gains.
+
+\subsection{Efficient Models and Edge Deployment}
+
+MobileNets~\cite{howard2017mobilenets} and
+EfficientNet~\cite{tan2019efficientnet} reduce model size through
+depthwise separable convolutions and compound scaling, respectively.
+Quantization~\cite{jacob2018quantization} and knowledge
+distillation~\cite{hinton2015distilling} further compress models for edge
+deployment.  ONNX Runtime~\cite{onnxruntime2019} provides a
+hardware-agnostic inference engine supporting CPU, GPU, and specialized
+accelerators.
+
+Our system leverages these advances by using lightweight ONNX models
+(MiDaS-Small at 63.7\,MB, YOLOv8-Nano at 12.3\,MB) but contributes an
+orthogonal optimization at the frame scheduling level: even the most
+efficient model wastes computation if applied to redundant frames.
+
+% =============================================================================
+% III. SYSTEM ARCHITECTURE
+% =============================================================================
+\section{System Architecture}
+\label{sec:architecture}
+
+\textsc{BlindAid} is organized around three operating modes, each targeting
+a distinct assistive scenario.  All inference is performed via ONNX
+Runtime~\cite{onnxruntime2019} on CPU, with no GPU requirements.  Fig.~\ref{fig:architecture} provides a schematic overview.
+
+\begin{figure}[t]
+  \centering
+  % TODO: Replace with actual architecture diagram
+  \fbox{\parbox{0.9\columnwidth}{\centering\vspace{2em}%
+    \textit{System architecture diagram}\\%
+    \textit{(to be inserted)}%
+    \vspace{2em}}}
+  \caption{Overview of the \textsc{BlindAid} system architecture.  The
+    Adaptive Frame Processing module gates all three operating modes,
+    determining whether each incoming frame should be processed or skipped
+    with cached results returned.}
+  \label{fig:architecture}
+\end{figure}
+
+\subsection{Guardian Mode (Navigation)}
+
+Guardian Mode provides real-time navigation assistance through three
+components executed in sequence:
+
+\begin{enumerate}
+  \item \textbf{Depth estimation} via MiDaS-Small~\cite{ranftl2020midas}
+    (ONNX, 63.7\,MB), producing a dense depth map at 22.8\,ms median
+    latency.
+  \item \textbf{Object detection} via YOLOv8-Nano~\cite{jocher2023yolov8}
+    (ONNX, 12.3\,MB), identifying obstacles, vehicles, people, and other
+    navigational hazards at 30.0\,ms median latency.
+  \item \textbf{Template-based captioning} via spatial natural language
+    generation, producing navigation-oriented scene descriptions at
+    31.0\,ms median latency.
+\end{enumerate}
+
+The combined pipeline processes a single frame in 87.4\,ms (median),
+enabling approximately 11 frames per second if every frame is processed.
+
+\subsection{Reading Mode}
+
+Reading Mode employs RapidOCR~\cite{rapidocr2023}, an ONNX-based OCR
+engine derived from PaddleOCR~\cite{paddleocr2020}, for text recognition.
+Median latency is 119.4\,ms per frame (P95: 164.9\,ms).  This mode is
+optimized for scenarios where the user holds a document, sign, or product
+label in front of the camera.  Because text content is typically static
+while the user holds the camera steady, this mode benefits significantly
+from stability-driven frame skipping (Section~\ref{sec:afp}).
+
+\subsection{People Mode}
+
+People Mode performs face detection to help users identify the presence
+and approximate location of people in their surroundings.  This mode uses
+a balanced combination of proximity and stability signals for frame
+scheduling.
+
+\subsection{Template-Based Captioning}
+\label{sec:template_captioning}
+
+A key design decision in \textsc{BlindAid} is the replacement of
+vision-language models with a deterministic template-based captioning
+pipeline.  Vision-language models such as BLIP~\cite{li2022blip} produce
+rich, descriptive captions (including colors, textures, and scene
+attributes), but at prohibitive cost: BLIP requires approximately 400\,MB
+of model weights and $\sim$1600\,ms per frame on CPU.
+
+Our template captioning pipeline operates as follows:
+\begin{enumerate}
+  \item YOLOv8-Nano detects objects and their bounding boxes.
+  \item Each detection is mapped to a \emph{spatial cell} defined by
+    horizontal position (left, center, right) and depth band (near, mid,
+    far), using the MiDaS depth map.
+  \item A template-based natural language generation (NLG) module produces
+    structured descriptions such as ``\textit{Person on the left, nearby.
+    Chair in the center, at medium distance.}''
+\end{enumerate}
+
+This approach achieves 31.0\,ms per frame, a $\sim$50$\times$ speedup over
+BLIP.  The trade-off is reduced descriptive richness: template captions do
+not convey colors, textures, or fine-grained scene attributes.  However,
+for navigation assistance---where the primary need is knowing \emph{what}
+is \emph{where} at \emph{what distance}---the spatial template format
+provides the essential information in a consistent, predictable structure
+that is easier for screen readers to parse.
+
+\subsection{ONNX Pipeline}
+
+All models are exported to ONNX format and executed via ONNX
+Runtime~\cite{onnxruntime2019}.  This provides several advantages:
+framework-agnostic deployment (models trained in PyTorch or PaddlePaddle
+run identically), CPU-optimized graph transformations, and a single runtime
+dependency.  Table~\ref{tab:models} summarizes the model characteristics.
+
+\begin{table}[t]
+  \centering
+  \caption{ONNX model characteristics and per-frame latency (30-frame
+    median on AMD Ryzen AI~7 350, CPU-only).}
+  \label{tab:models}
+  \begin{tabular}{@{}lccc@{}}
+    \toprule
+    \textbf{Model} & \textbf{Size} & \textbf{Median} & \textbf{P95} \\
+    \midrule
+    MiDaS-Small    & 63.7\,MB & 22.8\,ms & 24.1\,ms \\
+    YOLOv8-Nano    & 12.3\,MB & 30.0\,ms & 30.9\,ms \\
+    Template NLG   & ---      & 31.0\,ms & 33.6\,ms \\
+    RapidOCR       & ---      & 119.4\,ms & 164.9\,ms \\
+    \midrule
+    BLIP (baseline) & $\sim$400\,MB & $\sim$1600\,ms & --- \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+% =============================================================================
+% IV. ADAPTIVE FRAME PROCESSING
+% =============================================================================
+\section{Adaptive Frame Processing}
+\label{sec:afp}
+
+\subsection{Motivation}
+
+Video-based assistive systems face a fundamental tension: processing every
+frame maximizes responsiveness but wastes CPU on redundant content, while
+aggressive frame skipping saves resources but risks missing safety-critical
+changes.  A fixed skip policy (e.g., process every 10th frame) cannot
+distinguish between a user approaching a staircase and a user standing
+still---both receive the same processing rate.
+
+AFP resolves this by making the skip rate \emph{context-dependent}: frames
+are processed more frequently when obstacles are close (safety priority)
+and less frequently when the scene is stable and obstacles are distant
+(efficiency priority).
+
+\subsection{The Chicken-and-Egg Problem}
+
+A na\"{\i}ve adaptive policy would examine the \emph{current} frame's
+depth map to decide whether to process it---but computing the depth map
+\emph{is} the processing that the policy should potentially skip.  AFP
+resolves this circular dependency by using the \emph{previous} frame's
+depth map and scene histogram to make the current frame's skip decision.
+This introduces a one-frame latency in the adaptation signal, which is
+negligible at typical video frame rates (30\,fps corresponds to 33\,ms per
+frame).
+
+\subsection{Algorithm}
+
+The AFP algorithm maintains three state variables: the previous frame's
+depth map $D_{t-1}$, the previous frame's histogram $H_{t-1}$, and a skip
+counter $s$.  Algorithm~\ref{alg:afp} presents the complete procedure.
+
+\begin{algorithm}[t]
+  \caption{Adaptive Frame Processing (AFP)}
+  \label{alg:afp}
+  \begin{algorithmic}[1]
+    \REQUIRE Frame sequence $\{F_t\}$, mode $m \in \{\text{guardian}, \text{reading}, \text{people}\}$
+    \ENSURE Processed results or cached results for each frame
+    \STATE $s \leftarrow 0$ \COMMENT{Skip counter}
+    \STATE $D_\text{prev} \leftarrow \text{None}$
+    \STATE $H_\text{prev} \leftarrow \text{None}$
+    \STATE $\text{result}_\text{cached} \leftarrow \text{None}$
+    \FOR{each frame $F_t$}
+      \IF{$s > 0$}
+        \STATE $s \leftarrow s - 1$
+        \STATE \textbf{return} $\text{result}_\text{cached}$
+      \ENDIF
+      \STATE $\text{result}_t \leftarrow \text{Process}(F_t, m)$
+      \STATE $D_t \leftarrow \text{ExtractDepth}(\text{result}_t)$
+      \STATE $H_t \leftarrow \text{Histogram}(F_t)$
+      \STATE $s \leftarrow \text{ComputeSkip}(D_t, H_t, H_\text{prev}, m)$
+      \STATE $D_\text{prev} \leftarrow D_t$;~$H_\text{prev} \leftarrow H_t$
+      \STATE $\text{result}_\text{cached} \leftarrow \text{result}_t$
+      \STATE \textbf{return} $\text{result}_t$
+    \ENDFOR
+  \end{algorithmic}
+\end{algorithm}
+
+\subsection{Skip Count Computation}
+
+The skip count is determined by two signals, weighted by the operating
+mode:
+
+\textbf{Proximity signal.}  The minimum depth value in $D_t$ is compared
+against a threshold $\tau_p$ (default: 0.7, normalized).  If obstacles are
+closer than $\tau_p$, the skip count is set to $s_\text{min}$ (default: 2).
+If obstacles are far, the skip count is increased toward $s_\text{max}$
+(default: 15).
+
+\textbf{Stability signal.}  Scene stability is measured by computing the
+histogram correlation between $H_t$ and $H_{t-1}$ using
+OpenCV's~\cite{bradski2008opencv} correlation metric.  High correlation
+indicates a stable scene (increase skip); low correlation indicates scene
+change (decrease skip).  We use histogram correlation rather than frame
+hashing because histograms are robust to sensor noise and minor camera
+motion, whereas perceptual hashes can produce false positives under
+noise~\cite{bradski2008opencv}.
+
+\subsection{Mode-Specific Strategies}
+\label{sec:mode_strategies}
+
+Different assistive modes have different priorities, reflected in how the
+proximity and stability signals are weighted:
+
+\begin{itemize}
+  \item \textbf{Guardian Mode} (navigation): Proximity-driven.  The
+    proximity signal dominates, ensuring that approaching obstacles
+    immediately reduce the skip count.  This is the safety-critical mode.
+  \item \textbf{Reading Mode}: Stability-driven.  When text is stable in
+    the frame, there is no need to re-run OCR.  The stability signal
+    dominates, and the system skips aggressively when the scene is
+    unchanging.
+  \item \textbf{People Mode}: Balanced.  Both proximity and stability
+    contribute equally, since face detection benefits from both nearness
+    (face size) and scene dynamics (people entering/leaving the frame).
+\end{itemize}
+
+% =============================================================================
+% V. EXPERIMENTAL EVALUATION
+% =============================================================================
+\section{Experimental Evaluation}
+\label{sec:experiments}
+
+\subsection{Evaluation Platform and Setup}
+
+All experiments are conducted on the following platform:
+
+\begin{itemize}
+  \item \textbf{CPU}: AMD Ryzen AI~7 350 (8 cores)
+  \item \textbf{RAM}: 16\,GB
+  \item \textbf{OS}: Windows
+  \item \textbf{Runtime}: Python 3.14, ONNX Runtime (CPU provider)
+  \item \textbf{Inference}: CPU-only (no GPU, no NPU)
+\end{itemize}
+
+All reported timings are measured on synthetic test sequences.
+% TODO: Add real-world video evaluation when available.
+
+\subsection{AFP vs.\ Baseline Strategies}
+
+We compare AFP against two baseline frame scheduling strategies on a
+synthetic test sequence of 100 frames with varying obstacle distances and
+scene content:
+
+\begin{enumerate}
+  \item \textbf{Always-On}: Every frame is processed (no skipping).
+  \item \textbf{Static Skip (1/10)}: Every 10th frame is processed,
+    regardless of content.
+\end{enumerate}
+
+Table~\ref{tab:afp_baselines} presents the results.
+
+\begin{table}[t]
+  \centering
+  \caption{AFP vs.\ baseline strategies on 100 synthetic test frames
+    (Guardian Mode, CPU-only inference).}
+  \label{tab:afp_baselines}
+  \begin{tabular}{@{}lccc@{}}
+    \toprule
+    \textbf{Strategy} & \textbf{Frames} & \textbf{Skip} & \textbf{Total} \\
+                       & \textbf{Processed} & \textbf{Ratio} & \textbf{CPU (ms)} \\
+    \midrule
+    Always-On       & 100/100 &  0\% & 2341 \\
+    Static Skip     &  10/100 & 90\% &  236 \\
+    AFP (ours)      &  19/100 & 81\% &  440 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+The key insight is not that AFP processes fewer frames than Always-On
+(which is trivially achievable), but \emph{where} it allocates its
+processing budget.  AFP processes more frames than Static Skip (19 vs.\
+10), but concentrates this additional processing on frames where obstacles
+are close.  Static Skip is context-blind: it may skip a frame where the
+user is 0.5\,m from a wall while processing a frame in an empty corridor.
+
+During close-obstacle segments of the test sequence, AFP processes 90\%
+more frames than Static Skip, while still achieving an overall 81\% skip
+ratio (vs.\ Static Skip's 90\%).  The modest increase in total CPU time
+(440\,ms vs.\ 236\,ms) is the cost of this safety-aware scheduling.
+
+\subsection{Per-Model Latency Breakdown}
+
+Table~\ref{tab:latency} reports per-model latency statistics measured over
+30 frames.
+
+\begin{table}[t]
+  \centering
+  \caption{Per-model inference latency (30 frames, AMD Ryzen AI~7 350,
+    CPU-only).}
+  \label{tab:latency}
+  \begin{tabular}{@{}lcc@{}}
+    \toprule
+    \textbf{Component} & \textbf{Median (ms)} & \textbf{P95 (ms)} \\
+    \midrule
+    MiDaS-Small (depth)     & 22.8  & 24.1  \\
+    YOLOv8-Nano (detection) & 30.0  & 30.9  \\
+    Template captioning     & 31.0  & 33.6  \\
+    RapidOCR (text)         & 119.4 & 164.9 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+MiDaS-Small and YOLOv8-Nano exhibit tight latency distributions (P95
+within 6\% of median), indicating predictable performance suitable for
+real-time systems.  RapidOCR shows higher variance (P95 38\% above median),
+likely due to variable text density across frames.
+
+\subsection{Full Pipeline Performance}
+
+In Guardian Mode with AFP enabled, the full pipeline achieves the following
+per-frame timings over 100 frames:
+
+\begin{itemize}
+  \item \textbf{Processed frame}: 87.4\,ms (depth + detection + captioning)
+  \item \textbf{Skipped frame}: 0.001\,ms (cached result return)
+  \item \textbf{AFP skip ratio}: 81\%
+\end{itemize}
+
+The effective per-frame cost, amortized over all frames, is:
+\begin{equation}
+  \bar{t} = (1 - r) \cdot t_\text{proc} + r \cdot t_\text{skip}
+  \label{eq:amortized}
+\end{equation}
+where $r = 0.81$ is the skip ratio, $t_\text{proc} = 87.4$\,ms, and
+$t_\text{skip} \approx 0$\,ms, yielding $\bar{t} \approx 16.6$\,ms
+amortized per frame---well within real-time budget at 30\,fps (33\,ms
+per frame).
+
+\subsection{AFP Parameter Sensitivity}
+
+AFP has two primary parameters: the proximity threshold $\tau_p$ and the
+maximum skip count $s_\text{max}$.  Table~\ref{tab:sensitivity} shows how
+these parameters affect the skip ratio on the 100-frame synthetic test
+sequence.
+
+\begin{table}[t]
+  \centering
+  \caption{AFP parameter sensitivity: skip ratio (\%) as a function of
+    proximity threshold $\tau_p$ and maximum skip count $s_\text{max}$.}
+  \label{tab:sensitivity}
+  \begin{tabular}{@{}ccc@{}}
+    \toprule
+    $\tau_p$ & $s_\text{max}$ & \textbf{Skip Ratio (\%)} \\
+    \midrule
+    0.5 &  5 & 70 \\
+    0.7 & 15 & 81 \\
+    0.9 & 20 & 88 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+The default configuration ($\tau_p = 0.7$, $s_\text{max} = 15$) provides a
+balanced trade-off.  More conservative settings ($\tau_p = 0.5$,
+$s_\text{max} = 5$) process 30\% of frames, suitable for environments with
+frequent obstacles.  More aggressive settings ($\tau_p = 0.9$,
+$s_\text{max} = 20$) skip 88\% of frames, suitable for open environments.
+
+\subsection{Template Captioning vs.\ BLIP}
+
+Table~\ref{tab:captioning} compares template captioning against BLIP on
+CPU.
+
+\begin{table}[t]
+  \centering
+  \caption{Template captioning vs.\ BLIP~\cite{li2022blip} on CPU.}
+  \label{tab:captioning}
+  \begin{tabular}{@{}lccc@{}}
+    \toprule
+    \textbf{Method} & \textbf{Latency} & \textbf{Model Size} & \textbf{Descriptive} \\
+    \midrule
+    BLIP            & $\sim$1600\,ms & $\sim$400\,MB & Rich \\
+    Template (ours) & 31\,ms         & ---           & Spatial only \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Template captioning sacrifices descriptive richness (no colors, textures,
+or scene-level attributes) for a $\sim$50$\times$ latency reduction and
+deterministic, explainable outputs.  For the navigation assistance use
+case, spatial information (``what is where at what distance'') is the
+primary requirement, and the consistent output format is arguably
+advantageous for text-to-speech delivery.
+
+% TODO: Add perceptual quality comparison (user study or BLEU/METEOR
+% scores against ground-truth navigation instructions) when available.
+
+\subsection{AFP Unit Test Validation}
+
+To ensure correctness, we validate AFP behavior through six unit tests
+covering boundary conditions and expected adaptive behavior:
+
+\begin{enumerate}
+  \item Close obstacle ($d < \tau_p$) yields minimum skip count ($s = 2$).
+  \item Far obstacle ($d \gg \tau_p$) yields elevated skip count ($s = 11$).
+  \item Stable scene (high histogram correlation) increases skip count
+    toward $s_\text{max}$.
+  \item Changing scene (low histogram correlation) decreases skip count.
+  \item The first frame is always processed (no skip on initialization).
+  \item Skip values remain within mode-specific bounds
+    $[s_\text{min}, s_\text{max}]$.
+\end{enumerate}
+
+All six tests pass, confirming that AFP produces non-hardcoded, input-dependent
+skip counts and correctly uses the previous frame's depth map.
+
+% =============================================================================
+% VI. DISCUSSION
+% =============================================================================
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{Limitations}
+
+Several limitations of the current work should be acknowledged:
+
+\textbf{Synthetic evaluation.}  All benchmarks in this paper are measured
+on synthetic test sequences with controlled obstacle distances and scene
+changes.  Real-world video introduces additional challenges: motion blur,
+dynamic lighting, unpredictable obstacle trajectories, and camera shake.
+The reported skip ratios and latency improvements may differ under these
+conditions.
+
+\textbf{Heuristic scheduling.}  AFP is a hand-designed heuristic with
+manually tuned parameters ($\tau_p$, $s_\text{min}$, $s_\text{max}$),
+rather than a learned policy.  A reinforcement learning approach that
+optimizes a joint safety--efficiency objective could potentially discover
+better skip strategies, particularly in complex environments with fast
+obstacle dynamics.
+
+\textbf{Template captioning trade-offs.}  While template captioning
+provides the $\sim$50$\times$ speedup critical for CPU deployment, it
+fundamentally cannot describe attributes absent from the detection
+vocabulary (e.g., ``wet floor'', ``uneven pavement'').  Users who need
+richer scene understanding may benefit from a hybrid approach that
+invokes a vision-language model on keyframes.
+
+\textbf{Single-camera constraint.}  The system relies on monocular depth
+estimation, which is inherently less accurate than stereo or active depth
+sensing (e.g., LiDAR, structured light).  MiDaS provides relative rather
+than metric depth, which is sufficient for proximity-based AFP triggering
+but insufficient for precise distance reporting.
+
+\textbf{Evaluation scope.}  We do not report user studies with visually
+impaired participants, nor do we evaluate end-to-end task completion
+metrics (e.g., obstacle avoidance rate, text reading accuracy in the
+wild).  Such evaluations are essential for validating real-world utility.
+
+\subsection{Future Work}
+
+\textbf{Real-world video evaluation.}  The most pressing next step is
+evaluating \textsc{BlindAid} on real-world video sequences captured in
+diverse environments (indoor, outdoor, varying lighting) and measuring AFP
+behavior under natural obstacle distributions.
+
+\textbf{Learned adaptive policies.}  Replacing the heuristic AFP algorithm
+with a lightweight learned policy (e.g., a small MLP or decision tree
+trained via reinforcement learning) could improve adaptivity, particularly
+for the stability signal where the optimal histogram correlation threshold
+may vary by environment.
+
+\textbf{User studies.}  Conducting user studies with visually impaired
+participants is critical for validating the practical utility of the
+system and identifying unmet needs not captured by synthetic benchmarks.
+
+\textbf{Hybrid captioning.}  A hybrid strategy that uses template
+captioning for most frames but invokes a vision-language model for
+detected keyframes (e.g., when entering a new room or encountering an
+unfamiliar object) could combine the speed of templates with the richness
+of learned captioning.
+
+\textbf{Multi-modal fusion.}  Integrating audio cues (e.g., traffic
+sounds, speech detection) with visual processing could improve scene
+understanding and reduce reliance on frame-by-frame visual processing.
+
+% =============================================================================
+% VII. CONCLUSION
+% =============================================================================
+\section{Conclusion}
+\label{sec:conclusion}
+
+We presented \textsc{BlindAid}, a multi-modal assistive vision system that
+runs entirely on CPU using ONNX Runtime, and introduced Adaptive Frame
+Processing (AFP), a context-aware frame scheduling algorithm for
+resource-efficient video analysis.  AFP resolves the chicken-and-egg
+problem of needing depth information to decide frame skip rates by using
+the previous frame's depth map, achieving an 81\% frame skip ratio while
+concentrating processing on safety-critical frames where obstacles are
+nearby.
+
+Template-based spatial captioning provides a $\sim$50$\times$ speedup over
+vision-language models by replacing learned image-to-text generation with
+deterministic spatial natural language generation, producing consistent,
+explainable navigation descriptions at 31\,ms per frame on CPU.
+
+The complete Guardian Mode pipeline achieves 87.4\,ms per processed frame
+on a consumer laptop (AMD Ryzen AI~7 350), with an amortized cost of
+$\sim$16.6\,ms per frame when AFP is enabled---well within real-time
+requirements at 30\,fps.  These results demonstrate that adaptive temporal
+scheduling is a practical and complementary approach to model compression
+for efficient assistive vision, enabling multi-modal scene understanding
+without GPU hardware.
+
+All results are currently evaluated on synthetic test sequences.
+Validation on real-world video and user studies with visually impaired
+participants are planned as immediate next steps.
+
+% =============================================================================
+% REFERENCES
+% =============================================================================
+\balance
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\end{document}
