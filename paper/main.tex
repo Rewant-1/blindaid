@@ -1,5 +1,6 @@
 % =============================================================================
-% Adaptive Frame Processing for Resource-Efficient Multi-Modal Assistive Vision
+% BlindAid: A CPU-Only Multi-Modal Assistive Vision System
+% with Adaptive Frame Processing
 % IEEE Conference Format
 % =============================================================================
 \documentclass[conference]{IEEEtran}
@@ -17,6 +18,8 @@
 \usepackage{url}
 \usepackage{hyperref}
 \usepackage{balance}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, fit, calc}
 
 % --- TODO command for placeholders ---
 \newcommand{\TODO}[1]{\textcolor{red}{\textbf{[TODO: #1]}}}
@@ -26,7 +29,7 @@
 % =============================================================================
 % TITLE AND AUTHORS
 % =============================================================================
-\title{Adaptive Frame Processing for Resource-Efficient\\Multi-Modal Assistive Vision}
+\title{BlindAid: A CPU-Only Multi-Modal Assistive Vision\\System with Adaptive Frame Processing}
 
 \author{
   \IEEEauthorblockN{Author Name}
@@ -113,11 +116,11 @@ in an open room.
 
 This paper makes four contributions:
 \begin{enumerate}
-  \item \textbf{Adaptive Frame Processing (AFP)}, a heuristic algorithm
-    that dynamically adjusts frame skip rates based on obstacle proximity
-    and scene stability, using the previous frame's depth map to resolve
-    the chicken-and-egg dependency between skip decisions and depth
-    computation.
+  \item \textbf{Adaptive Frame Processing (AFP)}, a context-aware
+    scheduling policy that dynamically adjusts frame skip rates based on
+    obstacle proximity and scene stability, using the previous frame's
+    depth map to resolve the chicken-and-egg dependency between skip
+    decisions and depth computation.
   \item \textbf{Depth--detection fusion with a scene state engine} that
     combines monocular depth maps with object bounding boxes to produce
     distance-aware detections (e.g., ``person ahead, about 2~meters''),
@@ -211,15 +214,71 @@ Runtime~\cite{onnxruntime2019} on CPU, with no GPU requirements.  Fig.~\ref{fig:
 
 \begin{figure}[t]
   \centering
-  % TODO: Replace with actual architecture diagram
-  \fbox{\parbox{0.9\columnwidth}{\centering\vspace{2em}%
-    \textit{System architecture diagram}\\%
-    \textit{(to be inserted)}%
-    \vspace{2em}}}
-  \caption{Overview of the \textsc{BlindAid} system architecture.  The
-    Adaptive Frame Processing module gates all three operating modes,
-    determining whether each incoming frame should be processed or skipped
-    with cached results returned.}
+  \resizebox{\columnwidth}{!}{%
+  \begin{tikzpicture}[
+    box/.style={rectangle, draw, rounded corners=3pt, minimum width=2cm,
+                minimum height=0.7cm, align=center, font=\small},
+    mode/.style={box, fill=blue!12},
+    model/.style={box, fill=orange!15},
+    fusion/.style={box, fill=green!12},
+    afp/.style={box, fill=red!10, dashed},
+    io/.style={box, fill=gray!15},
+    arr/.style={-{Stealth[length=5pt]}, thick},
+  ]
+    % Input
+    \node[io] (cam) {Camera Frame};
+
+    % AFP
+    \node[afp, below=0.6cm of cam] (afp) {AFP\\\scriptsize(prev depth + hist corr)};
+
+    % Skip path
+    \node[io, right=2.5cm of afp] (cache) {Cached Result};
+
+    % Perception layer
+    \node[model, below left=1.0cm and 0.3cm of afp] (midas) {MiDaS-Small\\\scriptsize 22.8\,ms};
+    \node[model, below right=1.0cm and 0.3cm of afp] (yolo) {YOLOv8n\\\scriptsize 30.0\,ms};
+
+    % Mode switch (below AFP, centered)
+    \node[mode, below=3.3cm of afp] (modesw) {Mode Switch};
+
+    % Three modes
+    \node[mode, below left=0.8cm and 1.8cm of modesw] (guardian) {Guardian\\\scriptsize Navigation};
+    \node[mode, below=0.8cm of modesw] (reading) {Reading\\\scriptsize OCR};
+    \node[mode, below right=0.8cm and 1.8cm of modesw] (people) {People\\\scriptsize Faces};
+
+    % Fusion (only in guardian path)
+    \node[fusion, below=0.7cm of guardian] (fuse) {Depth Fusion\\\scriptsize +2.6\,ms};
+    \node[fusion, below=0.6cm of fuse] (scene) {Scene State\\\scriptsize Engine};
+
+    % Output
+    \node[io, below=3.5cm of modesw] (speech) {Speech Output\\\scriptsize (TTS)};
+
+    % Arrows
+    \draw[arr] (cam) -- (afp);
+    \draw[arr] (afp) -- node[above, font=\scriptsize]{skip} (cache);
+    \draw[arr] (afp) -- node[left, font=\scriptsize]{process} (midas);
+    \draw[arr] (afp) -- node[right, font=\scriptsize]{} (yolo);
+    \draw[arr] (midas) -- (modesw);
+    \draw[arr] (yolo) -- (modesw);
+    \draw[arr] (modesw) -- (guardian);
+    \draw[arr] (modesw) -- (reading);
+    \draw[arr] (modesw) -- (people);
+    \draw[arr] (guardian) -- (fuse);
+    \draw[arr] (fuse) -- (scene);
+    \draw[arr] (scene) |- (speech);
+    \draw[arr] (reading) |- (speech);
+    \draw[arr] (people) |- (speech);
+
+    % Depth feedback
+    \draw[arr, dashed, gray] (midas.west) -- ++(-0.7,0) |- (afp.west)
+      node[pos=0.25, left, font=\scriptsize, text=gray]{prev depth};
+  \end{tikzpicture}}
+  \caption{\textsc{BlindAid} system architecture.  AFP gates incoming
+    frames using the previous frame's depth map and histogram correlation.
+    In Guardian Mode, depth--detection fusion and the scene state engine
+    add 2.6\,ms overhead for distance-aware, event-based speech output.
+    Reading and People modes use stability-driven and balanced scheduling
+    respectively.}
   \label{fig:architecture}
 \end{figure}
 

@@ -87,7 +87,7 @@ MODE_CONFIG = {
 
 
 class AdaptiveFrameProcessor:
-    """Context-aware adaptive frame processing for edge deployment.
+    """Context-aware adaptive frame processing for CPU-only deployment.
 
     Core algorithm:
         For guardian mode:
