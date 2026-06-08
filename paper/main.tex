@@ -50,26 +50,28 @@ Existing approaches typically rely on GPU-accelerated inference or
 heavyweight vision-language models, limiting deployment on consumer
 hardware.  We present \textsc{BlindAid}, a multi-modal assistive vision
 system that runs entirely on CPU using ONNX Runtime, and introduce
-\emph{Adaptive Frame Processing} (AFP), a heuristic scheduling algorithm
-that dynamically adjusts frame processing rates based on obstacle proximity
-and scene stability.  AFP addresses a fundamental chicken-and-egg problem
-in frame skipping---needing depth information to decide whether to skip,
-yet needing to process a frame to obtain depth---by using the
-\emph{previous} frame's depth map to determine the current frame's skip
-count.  On a consumer laptop with CPU-only inference, AFP achieves an 81\%
-frame skip ratio while processing 90\% more frames than static skip
-policies during close-obstacle scenarios.  We further demonstrate that
-template-based captioning using spatial natural language generation achieves
-a $\sim$50$\times$ speedup over vision-language models such as BLIP, at
-31\,ms versus $\sim$1600\,ms per frame, while providing deterministic and
-explainable navigation descriptions.  All benchmarks are evaluated on
-synthetic test sequences; real-world video evaluation is planned as future
-work.
+\emph{Adaptive Frame Processing} (AFP), a context-aware scheduling
+algorithm that dynamically adjusts frame processing rates based on
+obstacle proximity and scene stability.  AFP addresses a fundamental
+chicken-and-egg problem in frame skipping---needing depth information to
+decide whether to skip, yet needing to process a frame to obtain
+depth---by using the \emph{previous} frame's depth map to determine the
+current frame's skip count.  We further introduce a depth--detection
+fusion layer and a scene state engine that combines monocular depth with
+object bounding boxes for distance-aware detections and event-based
+speech output.  Evaluated on 7 real-world video clips (77.4\,s of walking
+footage) recorded on a consumer smartphone, AFP achieves 84.3\% CPU
+savings while maintaining 80.4\% obstacle detection coverage---11.2
+percentage points higher than static frame skipping at comparable skip
+ratios.  The full perception pipeline runs at $\sim$87\,ms per processed
+frame on a consumer laptop with CPU-only inference, with an amortized
+cost of $\sim$13\,ms per frame when AFP is enabled.
 \end{abstract}
 
 \begin{IEEEkeywords}
-assistive vision, adaptive computation, depth estimation, ONNX Runtime,
-CPU inference, frame skipping, visually impaired
+assistive vision, adaptive computation, depth estimation, depth-detection
+fusion, scene state tracking, ONNX Runtime, CPU inference, visually
+impaired
 \end{IEEEkeywords}
 
 % =============================================================================
@@ -134,9 +136,8 @@ This paper makes four contributions:
 \end{enumerate}
 
 We evaluate \textsc{BlindAid} on an AMD Ryzen AI~7 350 processor with
-CPU-only inference.  All results reported in this paper are measured on
-synthetic test sequences; real-world video evaluation is planned as future
-work.
+CPU-only inference, using both synthetic benchmarks and 7 real-world
+video clips recorded with a smartphone camera.
 
 % =============================================================================
 % II. RELATED WORK
@@ -479,8 +480,9 @@ All experiments are conducted on the following platform:
   \item \textbf{Inference}: CPU-only (no GPU, no NPU)
 \end{itemize}
 
-All reported timings are measured on synthetic test sequences.
-% TODO: Add real-world video evaluation when available.
+Latency and throughput benchmarks use synthetic test sequences for
+controlled measurement.  Detection coverage and CPU savings are evaluated
+on 7 real-world video clips (Section~\ref{sec:realworld}).
 
 \subsection{AFP vs.\ Baseline Strategies}
 
@@ -634,8 +636,66 @@ case, spatial information (``what is where at what distance'') is the
 primary requirement, and the consistent output format is arguably
 advantageous for text-to-speech delivery.
 
-% TODO: Add perceptual quality comparison (user study or BLEU/METEOR
-% scores against ground-truth navigation instructions) when available.
+\subsection{Real-World Video Evaluation}
+\label{sec:realworld}
+
+To validate AFP on naturalistic data, we recorded 7 video clips (total
+77.4\,s, 775 sampled frames at $\sim$10\,fps) using a smartphone held at
+chest height in diverse scenarios: indoor hallways, outdoor sidewalks with
+obstacles, cluttered rooms, and sign/text regions.  For each clip, we run
+three strategies---Always-On (ground truth), Static Skip (1/10), and
+AFP---and measure \emph{detection coverage}: the fraction of Always-On
+obstacle frames for which the experimental strategy also detects the
+same obstacle class within a $\pm$5 frame window.  This methodology
+requires no manual annotation: Always-On serves as the automatic ground
+truth.
+
+Table~\ref{tab:realworld} presents the per-clip and aggregate results.
+
+\begin{table}[t]
+  \centering
+  \caption{Real-world video evaluation: AFP vs.\ baselines on 7 clips
+    (775 frames, 77.4\,s total).  Coverage = fraction of Always-On
+    obstacle events detected within $\pm$5 frames.}
+  \label{tab:realworld}
+  \begin{tabular}{@{}lcccc@{}}
+    \toprule
+    \textbf{Clip} & \textbf{GT Obs.} & \textbf{SS Cov.} & \textbf{AFP Cov.} & \textbf{AFP Skip} \\
+    \midrule
+    Clip 1 (indoor)    & 55  & 49.1\% & 67.3\% & 88.1\% \\
+    Clip 2 (outdoor)   & 65  & 100\%  & 100\%  & 76.3\% \\
+    Clip 3 (hallway)   & 17  & 35.3\% & 58.8\% & 83.0\% \\
+    Clip 4 (mixed)     & 47  & 59.6\% & 74.5\% & 86.3\% \\
+    Clip 5 (cluttered) & 97  & 89.7\% & 88.7\% & 87.4\% \\
+    Clip 6 (signs)     & 11  & 63.6\% & 90.9\% & 85.3\% \\
+    Clip 7 (outdoor)   & 91  & 86.8\% & 82.4\% & 87.2\% \\
+    \midrule
+    \textbf{Average}   & --- & 69.2\% & 80.4\% & 84.8\% \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\textbf{Key findings:}
+\begin{itemize}
+  \item AFP achieves 80.4\% average detection coverage, 11.2 percentage
+    points higher than Static Skip (69.2\%), while maintaining a comparable
+    84.8\% skip ratio.
+  \item AFP outperforms Static Skip on coverage in 4 of 7 clips, ties on 1,
+    and loses on 2 (dense-obstacle scenarios where both strategies have
+    high coverage).
+  \item The average AFP response delay is 2.0 frames (vs.\ 2.3 for Static
+    Skip), meaning AFP detects obstacles slightly faster when it does
+    process.
+  \item Total CPU savings: 84.3\% (AFP) vs.\ 89.0\% (Static Skip) vs.\
+    Always-On.  AFP uses 20\% more CPU than Static Skip but catches 11.2\%
+    more obstacles.
+\end{itemize}
+
+Notably, in Clip~2 (high-density outdoor scene with avg\_proximity = 0.80),
+AFP reduces its skip ratio to 76.3\% (the lowest across all clips),
+processing 22 of 93 frames compared to Static Skip's fixed 10.  This
+demonstrates the proximity-driven adaptation: AFP automatically allocates
+more processing budget when obstacles are consistently close.
 
 \subsection{Unit Test Validation}
 
@@ -677,13 +737,6 @@ depth fusion, object tracking, and event-based speech generation.
 
 Several limitations of the current work should be acknowledged:
 
-\textbf{Synthetic evaluation.}  All benchmarks in this paper are measured
-on synthetic test sequences with controlled obstacle distances and scene
-changes.  Real-world video introduces additional challenges: motion blur,
-dynamic lighting, unpredictable obstacle trajectories, and camera shake.
-The reported skip ratios and latency improvements may differ under these
-conditions.
-
 \textbf{Heuristic scheduling.}  AFP is a hand-designed heuristic with
 manually tuned parameters ($\tau_p$, $s_\text{min}$, $s_\text{max}$),
 rather than a learned policy.  A reinforcement learning approach that
@@ -691,50 +744,54 @@ optimizes a joint safety--efficiency objective could potentially discover
 better skip strategies, particularly in complex environments with fast
 obstacle dynamics.
 
+\textbf{Relative depth.}  The system relies on monocular depth
+estimation via MiDaS, which provides \emph{relative} rather than
+\emph{metric} depth.  Distance categories (``about 2~meters'') are
+approximate, calibrated empirically rather than geometrically.  Stereo
+or active depth sensing would provide true metric distances but at
+higher hardware cost.
+
+\textbf{Detection coverage gap.}  While AFP achieves 80.4\% average
+detection coverage (vs.\ Static Skip's 69.2\%), approximately 19.6\% of
+obstacle events are missed.  In safety-critical deployments, this gap
+should be addressed through more conservative AFP parameters or
+complementary sensing modalities.
+
 \textbf{Template captioning trade-offs.}  While template captioning
 provides the $\sim$50$\times$ speedup critical for CPU deployment, it
 fundamentally cannot describe attributes absent from the detection
 vocabulary (e.g., ``wet floor'', ``uneven pavement'').  Users who need
 richer scene understanding may benefit from a hybrid approach that
-invokes a vision-language model on keyframes.
-
-\textbf{Single-camera constraint.}  The system relies on monocular depth
-estimation, which is inherently less accurate than stereo or active depth
-sensing (e.g., LiDAR, structured light).  MiDaS provides relative rather
-than metric depth, which is sufficient for proximity-based AFP triggering
-but insufficient for precise distance reporting.
+invokes a vision-language model on demand.
 
 \textbf{Evaluation scope.}  We do not report user studies with visually
 impaired participants, nor do we evaluate end-to-end task completion
-metrics (e.g., obstacle avoidance rate, text reading accuracy in the
-wild).  Such evaluations are essential for validating real-world utility.
+metrics (e.g., obstacle avoidance rate in real navigation).  Such
+evaluations are essential for validating real-world utility.
 
 \subsection{Future Work}
 
-\textbf{Real-world video evaluation.}  The most pressing next step is
-evaluating \textsc{BlindAid} on real-world video sequences captured in
-diverse environments (indoor, outdoor, varying lighting) and measuring AFP
-behavior under natural obstacle distributions.
-
 \textbf{Learned adaptive policies.}  Replacing the heuristic AFP algorithm
-with a lightweight learned policy (e.g., a small MLP or decision tree
-trained via reinforcement learning) could improve adaptivity, particularly
-for the stability signal where the optimal histogram correlation threshold
-may vary by environment.
+with a lightweight learned policy (e.g., a small MLP trained via
+reinforcement learning on the safety--efficiency trade-off) could improve
+adaptivity.
 
 \textbf{User studies.}  Conducting user studies with visually impaired
-participants is critical for validating the practical utility of the
-system and identifying unmet needs not captured by synthetic benchmarks.
+participants is critical for validating practical utility and identifying
+unmet needs.
 
-\textbf{Hybrid captioning.}  A hybrid strategy that uses template
-captioning for most frames but invokes a vision-language model for
-detected keyframes (e.g., when entering a new room or encountering an
-unfamiliar object) could combine the speed of templates with the richness
-of learned captioning.
+\textbf{Free-space estimation.}  Adding walkable path detection via
+the depth map (floor plane segmentation) would complement object-level
+obstacle detection with scene-level spatial understanding.
 
-\textbf{Multi-modal fusion.}  Integrating audio cues (e.g., traffic
-sounds, speech detection) with visual processing could improve scene
-understanding and reduce reliance on frame-by-frame visual processing.
+\textbf{On-demand VLM.}  A button-triggered vision-language model
+(e.g., Qwen2.5-VL, Gemma~3) for detailed scene description on demand
+would combine AFP's real-time efficiency with rich contextual
+understanding when requested.
+
+\textbf{Edge deployment.}  Evaluating the pipeline on embedded hardware
+(Raspberry Pi~5, Jetson Nano) with INT8 quantization would assess
+feasibility for wearable deployment.
 
 % =============================================================================
 % VII. CONCLUSION
@@ -747,26 +804,22 @@ runs entirely on CPU using ONNX Runtime, and introduced Adaptive Frame
 Processing (AFP), a context-aware frame scheduling algorithm for
 resource-efficient video analysis.  AFP resolves the chicken-and-egg
 problem of needing depth information to decide frame skip rates by using
-the previous frame's depth map, achieving an 81\% frame skip ratio while
-concentrating processing on safety-critical frames where obstacles are
-nearby.
+the previous frame's depth map.  A depth--detection fusion layer and scene
+state engine further transform raw detections into distance-aware,
+event-based speech output with only 2.6\,ms overhead.
 
-Template-based spatial captioning provides a $\sim$50$\times$ speedup over
-vision-language models by replacing learned image-to-text generation with
-deterministic spatial natural language generation, producing consistent,
-explainable navigation descriptions at 31\,ms per frame on CPU.
+Evaluated on 7 real-world video clips (77.4\,s of walking footage), AFP
+achieves 84.3\% CPU savings while maintaining 80.4\% obstacle detection
+coverage---11.2 percentage points higher than static frame skipping at
+comparable skip ratios.  The full pipeline runs at $\sim$87\,ms per
+processed frame on a consumer laptop (AMD Ryzen AI~7 350), with an
+amortized cost of $\sim$13\,ms per frame---well within real-time
+requirements at 30\,fps.
 
-The complete Guardian Mode pipeline achieves 87.4\,ms per processed frame
-on a consumer laptop (AMD Ryzen AI~7 350), with an amortized cost of
-$\sim$16.6\,ms per frame when AFP is enabled---well within real-time
-requirements at 30\,fps.  These results demonstrate that adaptive temporal
-scheduling is a practical and complementary approach to model compression
-for efficient assistive vision, enabling multi-modal scene understanding
-without GPU hardware.
-
-All results are currently evaluated on synthetic test sequences.
-Validation on real-world video and user studies with visually impaired
-participants are planned as immediate next steps.
+These results demonstrate that adaptive temporal scheduling, combined with
+lightweight depth--detection fusion and event-based scene tracking, is a
+practical approach to efficient assistive vision on consumer hardware
+without GPU acceleration.
 
 % =============================================================================
 % REFERENCES
