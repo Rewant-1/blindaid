@@ -341,6 +341,10 @@ class ModeController:
             logger.error("Unable to open camera index %s", self.camera_index)
             return
 
+        # Set buffer size to 1 to prevent OpenCV from queuing old frames.
+        # This eliminates the "laggy" delay where the video feed lags behind real-time.
+        capture.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+
         if config.FRAME_WIDTH:
             capture.set(cv2.CAP_PROP_FRAME_WIDTH, config.FRAME_WIDTH)
         if config.FRAME_HEIGHT:

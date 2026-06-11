@@ -214,11 +214,17 @@ class AdaptiveFrameProcessor:
             threshold = config.get("proximity_threshold", 0.7)
             if proximity > threshold:
                 # Obstacle close — minimal skipping for safety
-                skip = min_skip
+                skip = min_skip  # Safety override: obstacle close, minimal skip
             else:
-                # Safe distance — interpolate based on how far away
+                # Primary: proximity drives base skip
                 safety_factor = 1.0 - proximity
-                skip = int(min_skip + (max_skip - min_skip) * safety_factor)
+                base_skip = min_skip + (max_skip - min_skip) * safety_factor
+                # Secondary: stability modulates (+/- 20%)
+                # High stability -> increase skip slightly (scene unchanged)
+                # Low stability -> decrease skip slightly (scene changing)
+                stability_modifier = 0.8 + 0.4 * stability  # range [0.8, 1.2]
+                skip = int(base_skip * stability_modifier)
+                skip = max(min_skip, min(max_skip, skip))  # clamp
 
         elif mode == "reading":
             threshold = config.get("stability_threshold", 0.8)

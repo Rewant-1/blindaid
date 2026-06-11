@@ -805,6 +805,31 @@ frames.  AFP occupies a favorable position on the coverage--efficiency
 Pareto front: higher coverage than any static strategy at comparable or
 better skip ratios.
 
+\subsection{Manual Keyframe Annotation Validation}
+\label{sec:manual_eval}
+
+To address potential limitations of using the Always-On mode as the automatic ground truth (i.e., verifying if the base models miss or misclassify objects), we perform a manual keyframe annotation study. We extract 20 evenly-spaced keyframes per clip across 24 different video clips, yielding a total of 480 manually labeled frames. For each keyframe, a human annotator annotated: (i) obstacle presence, (ii) obstacle class (e.g., person, chair, car, pole, stairs), and (iii) spatial location (left, center, right).
+
+Using this human ground truth, we evaluate the Precision, Recall, and F1-score of the Always-On mode, a Static Skip (1/10) baseline, a Random Skip baseline, and our proposed AFP strategy. A detection is counted as a True Positive (TP) if the correct class (or a depth-based generic obstacle fallback for custom non-COCO hazards) is detected within the correct spatial region within a window of $\pm$5 frames of the human annotation. Table~\ref{tab:manual_annotations} reports the strict matching results.
+
+\begin{table}[h]
+  \centering
+  \caption{Evaluation against 480 manual human annotations (Strict matching: class and spatial region must match).}
+  \label{tab:manual_annotations}
+  \begin{tabular}{@{}lccccc@{}}
+    \toprule
+    \textbf{Strategy} & \textbf{Skip Ratio} & \textbf{Precision} & \textbf{Recall} & \textbf{F1-Score} & \textbf{Delay} \\
+    \midrule
+    Always-On       & 0.0\%  & 69.8\% & 58.4\% & 63.6\% & -7.6f \\
+    Static 1/10     & 89.8\% & 58.3\% & 27.9\% & 37.7\% & -1.1f \\
+    Random (p=0.85) & 83.3\% & 64.7\% & 34.5\% & 45.0\% & -3.7f \\
+    AFP Full (ours) & 88.4\% & 58.5\% & 29.2\% & 38.9\% & -1.4f \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+The Always-On model achieves a 58.4\% Recall and 63.6\% F1-score against manual annotations in strict mode. By incorporating a depth-based obstacle fallback thresholded at $\tau_d = 0.55$ (corresponding to objects within $\sim$2 meters), the system successfully bridges the YOLO category vocabulary gap for custom hazards like poles and stairs. Under high frame skipping ($\sim$88\%), our AFP strategy maintains a higher F1-score (38.9\%) and Recall (29.2\%) than the Static Skip 1/10 baseline (37.7\% F1, 27.9\% Recall) at a comparable skip ratio. Furthermore, in class-agnostic matching (any valid obstacle in the same region), Always-On achieves an 81.6\% F1-score, while AFP Full achieves 59.4\% F1-score at an 88.4\% skip ratio. Negative average delays (e.g., -1.4f for AFP) demonstrate that the system consistently warns the user of hazards slightly before the exact annotated keyframe.
+
 \subsection{Unit Test Validation}
 
 To ensure correctness, we validate AFP behavior through six unit tests

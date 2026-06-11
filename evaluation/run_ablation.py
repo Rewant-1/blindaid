@@ -46,6 +46,7 @@ def run_always_on_get_gt(frames: list) -> dict:
     """Run Always-On to get ground truth obstacle frames."""
     from blindaid.core.depth_onnx import DepthAnalyzerONNX
     from blindaid.core.detector_onnx import ObjectDetectorONNX
+    from blindaid.core.depth_fusion import fuse_detections
 
     depth = DepthAnalyzerONNX()
     detector = ObjectDetectorONNX()
@@ -54,8 +55,9 @@ def run_always_on_get_gt(frames: list) -> dict:
 
     all_detections = []
     latencies = []
-    obstacle_classes = {"person", "chair", "car", "truck", "bus", "bicycle",
-                        "motorcycle", "bench", "dog", "backpack", "suitcase"}
+    obstacle_classes = {"person", "bicycle", "car", "motorcycle", "bus", "train", "truck", "bench",
+                        "dog", "cat", "backpack", "umbrella", "handbag", "suitcase", "chair", "couch",
+                        "potted plant", "bed", "dining table", "toilet", "obstacle"}
 
     for i, frame in enumerate(frames):
         t0 = time.perf_counter()
@@ -65,12 +67,11 @@ def run_always_on_get_gt(frames: list) -> dict:
         latencies.append(elapsed)
 
         h, w = frame.shape[:2]
-        for det in dets:
-            cx = (det.x1 + det.x2) / 2
-            region = "left" if cx < w / 3 else ("center" if cx < 2 * w / 3 else "right")
+        fused = fuse_detections(dets, depth_map, (h, w), enable_fallback=True)
+        for fd in fused:
             all_detections.append({
-                "frame": i, "class": det.class_name,
-                "confidence": det.confidence, "region": region,
+                "frame": i, "class": fd.class_name,
+                "confidence": fd.confidence, "region": fd.region,
             })
 
     obstacle_frames = set()
@@ -89,6 +90,7 @@ def run_static_skip(frames: list, skip_interval: int) -> dict:
     """Run static skip baseline."""
     from blindaid.core.depth_onnx import DepthAnalyzerONNX
     from blindaid.core.detector_onnx import ObjectDetectorONNX
+    from blindaid.core.depth_fusion import fuse_detections
 
     depth = DepthAnalyzerONNX()
     detector = ObjectDetectorONNX()
@@ -97,24 +99,24 @@ def run_static_skip(frames: list, skip_interval: int) -> dict:
 
     latencies = []
     all_detections = []
-    obstacle_classes = {"person", "chair", "car", "truck", "bus", "bicycle",
-                        "motorcycle", "bench", "dog", "backpack", "suitcase"}
+    obstacle_classes = {"person", "bicycle", "car", "motorcycle", "bus", "train", "truck", "bench",
+                        "dog", "cat", "backpack", "umbrella", "handbag", "suitcase", "chair", "couch",
+                        "potted plant", "bed", "dining table", "toilet", "obstacle"}
 
     for i, frame in enumerate(frames):
         if i % skip_interval == 0:
             t0 = time.perf_counter()
-            depth.compute_depth(frame)
+            depth_map = depth.compute_depth(frame)
             dets = detector.detect(frame)
             elapsed = (time.perf_counter() - t0) * 1000
             latencies.append(elapsed)
 
             h, w = frame.shape[:2]
-            for det in dets:
-                cx = (det.x1 + det.x2) / 2
-                region = "left" if cx < w / 3 else ("center" if cx < 2 * w / 3 else "right")
+            fused = fuse_detections(dets, depth_map, (h, w), enable_fallback=True)
+            for fd in fused:
                 all_detections.append({
-                    "frame": i, "class": det.class_name,
-                    "confidence": det.confidence, "region": region,
+                    "frame": i, "class": fd.class_name,
+                    "confidence": fd.confidence, "region": fd.region,
                 })
 
     obstacle_frames = set()
@@ -132,6 +134,66 @@ def run_static_skip(frames: list, skip_interval: int) -> dict:
     }
 
 
+def run_random_skip(frames: list, skip_prob: float = 0.85, seed: int = 42) -> dict:
+    """Run random skip baseline.
+
+    For each frame, randomly decides whether to process it.
+    Always processes frame 0. Uses a fixed random seed for reproducibility.
+
+    Args:
+        frames: list of video frames
+        skip_prob: probability of skipping each frame (default 0.85 to match AFP's ~85%)
+        seed: random seed for reproducibility
+    """
+    from blindaid.core.depth_onnx import DepthAnalyzerONNX
+    from blindaid.core.detector_onnx import ObjectDetectorONNX
+    from blindaid.core.depth_fusion import fuse_detections
+
+    rng = np.random.RandomState(seed)
+
+    depth = DepthAnalyzerONNX()
+    detector = ObjectDetectorONNX()
+    depth.compute_depth(frames[0])
+    detector.detect(frames[0])
+
+    latencies = []
+    all_detections = []
+    obstacle_classes = {"person", "bicycle", "car", "motorcycle", "bus", "train", "truck", "bench",
+                        "dog", "cat", "backpack", "umbrella", "handbag", "suitcase", "chair", "couch",
+                        "potted plant", "bed", "dining table", "toilet", "obstacle"}
+
+    for i, frame in enumerate(frames):
+        # Always process frame 0; otherwise process with probability (1 - skip_prob)
+        if i == 0 or rng.random() < (1.0 - skip_prob):
+            t0 = time.perf_counter()
+            depth_map = depth.compute_depth(frame)
+            dets = detector.detect(frame)
+            elapsed = (time.perf_counter() - t0) * 1000
+            latencies.append(elapsed)
+
+            h, w = frame.shape[:2]
+            fused = fuse_detections(dets, depth_map, (h, w), enable_fallback=True)
+            for fd in fused:
+                all_detections.append({
+                    "frame": i, "class": fd.class_name,
+                    "confidence": fd.confidence, "region": fd.region,
+                })
+
+    obstacle_frames = set()
+    for det in all_detections:
+        if det["class"] in obstacle_classes:
+            obstacle_frames.add(det["frame"])
+
+    return {
+        "skip_prob": skip_prob,
+        "frames_processed": len(latencies),
+        "skip_ratio": 1.0 - len(latencies) / len(frames) if frames else 0,
+        "total_cpu_ms": sum(latencies),
+        "obstacle_frame_indices": sorted(obstacle_frames),
+        "all_detections": all_detections,
+    }
+
+
 def run_afp_variant(frames: list, variant: str = "full") -> dict:
     """Run AFP with different signal combinations.
     
@@ -140,6 +202,7 @@ def run_afp_variant(frames: list, variant: str = "full") -> dict:
     from blindaid.core.adaptive_processor import AdaptiveFrameProcessor
     from blindaid.core.depth_onnx import DepthAnalyzerONNX
     from blindaid.core.detector_onnx import ObjectDetectorONNX
+    from blindaid.core.depth_fusion import fuse_detections
 
     depth_analyzer = DepthAnalyzerONNX()
     detector = ObjectDetectorONNX()
@@ -151,8 +214,9 @@ def run_afp_variant(frames: list, variant: str = "full") -> dict:
     latencies = []
     all_detections = []
     last_depth = None
-    obstacle_classes = {"person", "chair", "car", "truck", "bus", "bicycle",
-                        "motorcycle", "bench", "dog", "backpack", "suitcase"}
+    obstacle_classes = {"person", "bicycle", "car", "motorcycle", "bus", "train", "truck", "bench",
+                        "dog", "cat", "backpack", "umbrella", "handbag", "suitcase", "chair", "couch",
+                        "potted plant", "bed", "dining table", "toilet", "obstacle"}
 
     for i, frame in enumerate(frames):
         if variant == "full":
@@ -177,12 +241,11 @@ def run_afp_variant(frames: list, variant: str = "full") -> dict:
             last_depth = depth_map
 
             h, w = frame.shape[:2]
-            for det in dets:
-                cx = (det.x1 + det.x2) / 2
-                region = "left" if cx < w / 3 else ("center" if cx < 2 * w / 3 else "right")
+            fused = fuse_detections(dets, depth_map, (h, w), enable_fallback=True)
+            for fd in fused:
                 all_detections.append({
-                    "frame": i, "class": det.class_name,
-                    "confidence": det.confidence, "region": region,
+                    "frame": i, "class": fd.class_name,
+                    "confidence": fd.confidence, "region": fd.region,
                 })
 
     obstacle_frames = set()
@@ -358,6 +421,18 @@ def main():
             }
             print(f"    Coverage: {cov['coverage']:.1%}, Skip: {ss['skip_ratio']:.1%}")
 
+        # Random skip baseline
+        print(f"  Running Random Skip (p=0.85)...")
+        rs = run_random_skip(frames, skip_prob=0.85, seed=42)
+        cov = compute_coverage(gt, rs)
+        clip_result["random_skip"] = {
+            "skip_ratio": rs["skip_ratio"],
+            "coverage": cov["coverage"],
+            "cpu_ms": rs["total_cpu_ms"],
+            "frames_processed": rs["frames_processed"],
+        }
+        print(f"    Coverage: {cov['coverage']:.1%}, Skip: {rs['skip_ratio']:.1%}")
+
         # AFP variants
         for variant in ["full", "proximity_only", "stability_only"]:
             print(f"  Running AFP ({variant})...")
@@ -389,6 +464,7 @@ def main():
         ("static_5", "Static 1/5"),
         ("static_10", "Static 1/10"),
         ("static_15", "Static 1/15"),
+        ("random_skip", "Random Skip"),
         ("afp_proximity_only", "AFP Prox-only"),
         ("afp_stability_only", "AFP Stab-only"),
         ("afp_full", "AFP Full"),

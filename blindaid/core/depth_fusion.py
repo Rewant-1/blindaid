@@ -110,6 +110,7 @@ def fuse_detections(
     detections: list[Detection],
     depth_map: np.ndarray,
     frame_shape: tuple[int, int],
+    enable_fallback: bool = False,
 ) -> list[FusedDetection]:
     """Combine YOLO detections with MiDaS depth map.
 
@@ -123,6 +124,8 @@ def fuse_detections(
         detections: YOLO detection results
         depth_map: MiDaS depth map (H, W), values 0-1, higher = closer
         frame_shape: (height, width) of original frame
+        enable_fallback: If True, adds depth-based fallback obstacle detections
+                         for regions without YOLO detections.
 
     Returns:
         List of FusedDetection with distance info
@@ -168,6 +171,46 @@ def fuse_detections(
             region=region,
             vertical=vertical,
         ))
+
+    # --- Step 2: Depth-based fallback for regions without YOLO detections ---
+    if enable_fallback:
+        yolo_regions = {f.region for f in fused}
+        for r_name in ["left", "center", "right"]:
+            if r_name in yolo_regions:
+                continue  # Already has a YOLO detection in this region
+
+            # Define region slice in depth map coordinates
+            if r_name == "left":
+                x1_d, x2_d = 0, depth_w // 3
+                x1_f, x2_f = 0, frame_w // 3
+            elif r_name == "center":
+                x1_d, x2_d = depth_w // 3, 2 * depth_w // 3
+                x1_f, x2_f = frame_w // 3, 2 * frame_w // 3
+            else:  # right
+                x1_d, x2_d = 2 * depth_w // 3, depth_w
+                x1_f, x2_f = 2 * frame_w // 3, frame_w
+
+            y1_d, y2_d = depth_h // 3, 2 * depth_h // 3
+            y1_f, y2_f = frame_h // 3, 2 * frame_h // 3
+
+            region_slice = depth_map[y1_d:y2_d, x1_d:x2_d]
+            if region_slice.size > 0:
+                # 90th percentile captures the closest significant obstacle surface
+                r_depth = float(np.percentile(region_slice, 90))
+
+                # Threshold 0.55 corresponds to obstacles close/very_close (within ~2 meters)
+                if r_depth >= 0.55:
+                    dist_category, dist_label = classify_distance(r_depth)
+                    fused.append(FusedDetection(
+                        class_name="obstacle",
+                        confidence=r_depth,
+                        x1=x1_f, y1=y1_f, x2=x2_f, y2=y2_f,
+                        raw_depth=r_depth,
+                        distance_category=dist_category,
+                        distance_label=dist_label,
+                        region=r_name,
+                        vertical="mid",
+                    ))
 
     # Sort by distance (closest first — highest depth value)
     fused.sort(key=lambda f: f.raw_depth, reverse=True)

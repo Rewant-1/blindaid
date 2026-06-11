@@ -157,8 +157,9 @@ def run_always_on(frames: list) -> dict:
     # Frames with obstacles
     obstacle_frames = set()
     for det in all_detections:
-        if det["class"] in {"person", "chair", "car", "truck", "bus", "bicycle",
-                            "motorcycle", "bench", "dog", "backpack", "suitcase"}:
+        if det["class"] in {"person", "bicycle", "car", "motorcycle", "bus", "train", "truck", "bench",
+                            "dog", "cat", "backpack", "umbrella", "handbag", "suitcase", "chair", "couch",
+                            "potted plant", "bed", "dining table", "toilet"}:
             obstacle_frames.add(det["frame"])
 
     return {
@@ -218,8 +219,9 @@ def run_static_skip(frames: list, skip_interval: int = 10) -> dict:
 
     obstacle_frames = set()
     for det in all_detections:
-        if det["class"] in {"person", "chair", "car", "truck", "bus", "bicycle",
-                            "motorcycle", "bench", "dog", "backpack", "suitcase"}:
+        if det["class"] in {"person", "bicycle", "car", "motorcycle", "bus", "train", "truck", "bench",
+                            "dog", "cat", "backpack", "umbrella", "handbag", "suitcase", "chair", "couch",
+                            "potted plant", "bed", "dining table", "toilet"}:
             obstacle_frames.add(det["frame"])
 
     return {
@@ -288,8 +290,9 @@ def run_afp(frames: list) -> dict:
 
     obstacle_frames = set()
     for det in all_detections:
-        if det["class"] in {"person", "chair", "car", "truck", "bus", "bicycle",
-                            "motorcycle", "bench", "dog", "backpack", "suitcase"}:
+        if det["class"] in {"person", "bicycle", "car", "motorcycle", "bus", "train", "truck", "bench",
+                            "dog", "cat", "backpack", "umbrella", "handbag", "suitcase", "chair", "couch",
+                            "potted plant", "bed", "dining table", "toilet"}:
             obstacle_frames.add(det["frame"])
 
     return {
@@ -440,12 +443,12 @@ def evaluate_video(video_path: str, sample_every_n: int = 3) -> VideoResult:
     static_coverage = compute_detection_coverage(always_on, static)
 
     # Print results
-    print(f"\n  {'─' * 60}")
+    print(f"\n  {'-' * 60}")
     print(f"  RESULTS: {os.path.basename(video_path)}")
-    print(f"  {'─' * 60}")
+    print(f"  {'-' * 60}")
 
     print(f"\n  {'Strategy':<25} {'Processed':<12} {'Skip%':<10} {'CPU (ms)':<12} {'Coverage':<10}")
-    print(f"  {'─'*25} {'─'*12} {'─'*10} {'─'*12} {'─'*10}")
+    print(f"  {'-'*25} {'-'*12} {'-'*10} {'-'*12} {'-'*10}")
     print(f"  {'Always-On (GT)':<25} {always_on['frames_processed']:<12} {'0%':<10} {always_on['total_cpu_ms']:<12.0f} {'100%':<10}")
     print(f"  {'Static Skip (1/10)':<25} {static['frames_processed']:<12} {static['skip_ratio']:<10.0%} {static['total_cpu_ms']:<12.0f} {static_coverage['coverage']:<10.0%}")
     print(f"  {'AFP (ours)':<25} {afp['frames_processed']:<12} {afp['skip_ratio']:<10.0%} {afp['total_cpu_ms']:<12.0f} {afp_coverage['coverage']:<10.0%}")

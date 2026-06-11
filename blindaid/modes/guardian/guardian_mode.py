@@ -74,7 +74,7 @@ class GuardianMode:
             detections = self.object_detector.detect(frame)
 
             # --- Layer 2: Depth Fusion ---
-            fused = fuse_detections(detections, depth_map, (h_frame, w_frame))
+            fused = fuse_detections(detections, depth_map, (h_frame, w_frame), enable_fallback=True)
 
             # --- Layer 3: Scene State Engine ---
             events = self.scene_state.update(fused)
