@@ -111,6 +111,7 @@ def run_always_on(frames: list) -> dict:
     """Process every frame — this is our ground truth."""
     from blindaid.core.depth_onnx import DepthAnalyzerONNX
     from blindaid.core.detector_onnx import ObjectDetectorONNX
+    from blindaid.core.depth_fusion import fuse_detections
 
     depth = DepthAnalyzerONNX()
     detector = ObjectDetectorONNX()
@@ -130,16 +131,15 @@ def run_always_on(frames: list) -> dict:
         elapsed = (time.perf_counter() - t0) * 1000
         latencies.append(elapsed)
 
-        # Record detections with spatial info
+        # Record detections with spatial info using fuse_detections
         h, w = frame.shape[:2]
-        for det in detections:
-            cx = (det.x1 + det.x2) / 2
-            region = "left" if cx < w / 3 else ("center" if cx < 2 * w / 3 else "right")
+        fused = fuse_detections(detections, depth_map, (h, w), enable_fallback=True)
+        for fd in fused:
             all_detections.append({
                 "frame": i,
-                "class": det.class_name,
-                "confidence": det.confidence,
-                "region": region,
+                "class": fd.class_name,
+                "confidence": fd.confidence,
+                "region": fd.region,
             })
 
         # Proximity from depth
@@ -149,7 +149,7 @@ def run_always_on(frames: list) -> dict:
         results.append(FrameResult(
             frame_idx=i,
             was_processed=True,
-            detections=[(d.class_name, d.confidence) for d in detections],
+            detections=[(fd.class_name, fd.confidence) for fd in fused],
             depth_proximity=proximity,
             latency_ms=elapsed,
         ))
@@ -159,7 +159,7 @@ def run_always_on(frames: list) -> dict:
     for det in all_detections:
         if det["class"] in {"person", "bicycle", "car", "motorcycle", "bus", "train", "truck", "bench",
                             "dog", "cat", "backpack", "umbrella", "handbag", "suitcase", "chair", "couch",
-                            "potted plant", "bed", "dining table", "toilet"}:
+                            "potted plant", "bed", "dining table", "toilet", "obstacle"}:
             obstacle_frames.add(det["frame"])
 
     return {
@@ -180,6 +180,7 @@ def run_static_skip(frames: list, skip_interval: int = 10) -> dict:
     """Process every Nth frame."""
     from blindaid.core.depth_onnx import DepthAnalyzerONNX
     from blindaid.core.detector_onnx import ObjectDetectorONNX
+    from blindaid.core.depth_fusion import fuse_detections
 
     depth = DepthAnalyzerONNX()
     detector = ObjectDetectorONNX()
@@ -198,17 +199,16 @@ def run_static_skip(frames: list, skip_interval: int = 10) -> dict:
             dets = detector.detect(frame)
             elapsed = (time.perf_counter() - t0) * 1000
             latencies.append(elapsed)
-            last_detections = [(d.class_name, d.confidence) for d in dets]
 
             h, w = frame.shape[:2]
-            for det in dets:
-                cx = (det.x1 + det.x2) / 2
-                region = "left" if cx < w / 3 else ("center" if cx < 2 * w / 3 else "right")
+            fused = fuse_detections(dets, depth_map, (h, w), enable_fallback=True)
+            last_detections = [(fd.class_name, fd.confidence) for fd in fused]
+            for fd in fused:
                 all_detections.append({
                     "frame": i,
-                    "class": det.class_name,
-                    "confidence": det.confidence,
-                    "region": region,
+                    "class": fd.class_name,
+                    "confidence": fd.confidence,
+                    "region": fd.region,
                 })
 
             results.append(FrameResult(frame_idx=i, was_processed=True,
@@ -221,7 +221,7 @@ def run_static_skip(frames: list, skip_interval: int = 10) -> dict:
     for det in all_detections:
         if det["class"] in {"person", "bicycle", "car", "motorcycle", "bus", "train", "truck", "bench",
                             "dog", "cat", "backpack", "umbrella", "handbag", "suitcase", "chair", "couch",
-                            "potted plant", "bed", "dining table", "toilet"}:
+                            "potted plant", "bed", "dining table", "toilet", "obstacle"}:
             obstacle_frames.add(det["frame"])
 
     return {
@@ -241,6 +241,7 @@ def run_afp(frames: list) -> dict:
     from blindaid.core.adaptive_processor import AdaptiveFrameProcessor
     from blindaid.core.depth_onnx import DepthAnalyzerONNX
     from blindaid.core.detector_onnx import ObjectDetectorONNX
+    from blindaid.core.depth_fusion import fuse_detections
 
     depth = DepthAnalyzerONNX()
     detector = ObjectDetectorONNX()
@@ -267,17 +268,16 @@ def run_afp(frames: list) -> dict:
 
             afp.update_depth(depth_map)
             last_depth = depth_map
-            last_detections = [(d.class_name, d.confidence) for d in dets]
-
             h, w = frame.shape[:2]
-            for det in dets:
-                cx = (det.x1 + det.x2) / 2
-                region = "left" if cx < w / 3 else ("center" if cx < 2 * w / 3 else "right")
+            fused = fuse_detections(dets, depth_map, (h, w), enable_fallback=True)
+            last_detections = [(fd.class_name, fd.confidence) for fd in fused]
+
+            for fd in fused:
                 all_detections.append({
                     "frame": i,
-                    "class": det.class_name,
-                    "confidence": det.confidence,
-                    "region": region,
+                    "class": fd.class_name,
+                    "confidence": fd.confidence,
+                    "region": fd.region,
                 })
 
             results.append(FrameResult(frame_idx=i, was_processed=True,
@@ -292,7 +292,7 @@ def run_afp(frames: list) -> dict:
     for det in all_detections:
         if det["class"] in {"person", "bicycle", "car", "motorcycle", "bus", "train", "truck", "bench",
                             "dog", "cat", "backpack", "umbrella", "handbag", "suitcase", "chair", "couch",
-                            "potted plant", "bed", "dining table", "toilet"}:
+                            "potted plant", "bed", "dining table", "toilet", "obstacle"}:
             obstacle_frames.add(det["frame"])
 
     return {

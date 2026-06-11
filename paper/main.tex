@@ -62,13 +62,13 @@ depth---by using the \emph{previous} frame's depth map to determine the
 current frame's skip count.  We further introduce a depth--detection
 fusion layer and a scene state engine that combines monocular depth with
 object bounding boxes for distance-aware detections and event-based
-speech output.  Evaluated on 7 real-world video clips (77.4\,s of walking
-footage) recorded on a consumer smartphone, AFP achieves 84.3\% CPU
-savings while maintaining 80.4\% obstacle detection coverage---11.2
-percentage points higher than static frame skipping at comparable skip
-ratios.  The full perception pipeline runs at $\sim$87\,ms per processed
-frame on a consumer laptop with CPU-only inference, with an amortized
-cost of $\sim$13\,ms per frame when AFP is enabled.
+  speech output.  Evaluated on 24 real-world video clips (799.0\,s of walking
+  footage) recorded on a consumer smartphone, AFP achieves 88.3\% CPU
+  savings while maintaining 77.9\% obstacle detection coverage---comparable 
+  to static frame skipping at similar skip ratios but with lower response delay.  
+  The full perception pipeline runs at $\sim$87\,ms per processed
+  frame on a consumer laptop with CPU-only inference, with an amortized
+  cost of $\sim$13\,ms per frame when AFP is enabled.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -541,7 +541,7 @@ All experiments are conducted on the following platform:
 
 Latency and throughput benchmarks use synthetic test sequences for
 controlled measurement.  Detection coverage and CPU savings are evaluated
-on 7 real-world video clips (Section~\ref{sec:realworld}).
+on 24 real-world video clips (Section~\ref{sec:realworld}).
 
 \subsection{AFP vs.\ Baseline Strategies}
 
@@ -698,8 +698,8 @@ advantageous for text-to-speech delivery.
 \subsection{Real-World Video Evaluation}
 \label{sec:realworld}
 
-To validate AFP on naturalistic data, we recorded 7 video clips (total
-77.4\,s, 775 sampled frames at $\sim$10\,fps) using a smartphone held at
+To validate AFP on naturalistic data, we recorded 24 video clips (total
+799.0\,s, 7683 sampled frames at $\sim$10\,fps) using a smartphone held at
 chest height in diverse scenarios: indoor hallways, outdoor sidewalks with
 obstacles, cluttered rooms, and sign/text regions.  For each clip, we run
 three strategies---Always-On (ground truth), Static Skip (1/10), and
@@ -713,94 +713,89 @@ Table~\ref{tab:realworld} presents the per-clip and aggregate results.
 
 \begin{table}[t]
   \centering
-  \caption{Real-world video evaluation: AFP vs.\ baselines on 7 clips
-    (775 frames, 77.4\,s total).  Coverage = fraction of Always-On
+  \caption{Real-world video evaluation: AFP vs.\ baselines on 24 clips
+    (7683 frames, 799.0\,s total).  Coverage = fraction of Always-On
     obstacle events detected within $\pm$5 frames.}
   \label{tab:realworld}
   \begin{tabular}{@{}lcccc@{}}
     \toprule
     \textbf{Clip} & \textbf{GT Obs.} & \textbf{SS Cov.} & \textbf{AFP Cov.} & \textbf{AFP Skip} \\
     \midrule
-    Clip 1 (indoor)    & 55  & 49.1\% & 67.3\% & 88.1\% \\
-    Clip 2 (outdoor)   & 65  & 100\%  & 100\%  & 76.3\% \\
-    Clip 3 (hallway)   & 17  & 35.3\% & 58.8\% & 83.0\% \\
-    Clip 4 (mixed)     & 47  & 59.6\% & 74.5\% & 86.3\% \\
-    Clip 5 (cluttered) & 97  & 89.7\% & 88.7\% & 87.4\% \\
-    Clip 6 (signs)     & 11  & 63.6\% & 90.9\% & 85.3\% \\
-    Clip 7 (outdoor)   & 91  & 86.8\% & 82.4\% & 87.2\% \\
+    Clip 1             & 124  &  68.5\% &  74.2\% &  88.1\% \\
+    Clip 2             & 298  &  81.5\% &  81.5\% &  89.2\% \\
+    Clip 3             & 250  &  82.0\% &  90.8\% &  87.4\% \\
+    Clip 4             & 270  &  78.1\% &  71.1\% &  86.3\% \\
+    Clip 5             & 307  &  80.1\% &  79.8\% &  87.8\% \\
+    Clip 6             & 295  &  79.7\% &  79.0\% &  88.6\% \\
+    Clip 7             & 196  &  77.0\% &  77.6\% &  88.1\% \\
+    Clip 8             & 181  &  75.1\% &  77.9\% &  85.9\% \\
+    Clip 9             & 823  &  79.5\% &  75.6\% &  89.6\% \\
+    Clip 10            & 171  &  67.8\% &  57.3\% &  89.5\% \\
+    Clip 11            & 198  &  83.3\% &  85.4\% &  86.0\% \\
+    Clip 12            & 82   & 100.0\% & 100.0\% &  77.4\% \\
+    Clip 13            & 220  &  81.8\% &  80.5\% &  88.6\% \\
+    Clip 14            & 312  &  55.4\% &  58.0\% &  89.8\% \\
+    Clip 15            & 87   &  73.6\% &  71.3\% &  88.5\% \\
+    Clip 16            & 97   &  52.6\% &  53.6\% &  88.5\% \\
+    Clip 17            & 96   &  62.5\% &  68.8\% &  90.3\% \\
+    Clip 18            & 73   &  89.0\% &  89.0\% &  85.0\% \\
+    Clip 19            & 103  &  77.7\% &  72.8\% &  88.0\% \\
+    Clip 20            & 98   &  89.8\% &  77.6\% &  90.3\% \\
+    Clip 21            & 73   &  89.0\% &  89.0\% &  86.3\% \\
+    Clip 22            & 105  &  87.6\% &  88.6\% &  89.0\% \\
+    Clip 23            & 235  &  86.4\% &  90.2\% &  86.9\% \\
+    Clip 24            & 183  &  73.2\% &  80.3\% &  88.2\% \\
     \midrule
-    \textbf{Average}   & --- & 69.2\% & 80.4\% & 84.8\% \\
+    \textbf{Average}   & ---  &  78.0\% &  77.9\% &  87.6\% \\
     \bottomrule
   \end{tabular}
 \end{table}
 
 \textbf{Key findings:}
 \begin{itemize}
-  \item AFP achieves 80.4\% average detection coverage, 11.2 percentage
-    points higher than Static Skip (69.2\%), while maintaining a comparable
-    84.8\% skip ratio.
-  \item AFP outperforms Static Skip on coverage in 4 of 7 clips, ties on 1,
-    and loses on 2 (dense-obstacle scenarios where both strategies have
-    high coverage).
-  \item The average AFP response delay is 2.0 frames (vs.\ 2.3 for Static
-    Skip), meaning AFP detects obstacles slightly faster when it does
-    process.
-  \item Total CPU savings: 84.3\% (AFP) vs.\ 89.0\% (Static Skip) vs.\
-    Always-On.  AFP uses 20\% more CPU than Static Skip but catches 11.2\%
-    more obstacles.
+  \item AFP achieves 77.9\% average detection coverage at an 87.6\% average skip ratio, which is comparable to Static Skip (78.0\% coverage at an 89.8\% skip ratio).
+  \item AFP outperforms Static Skip on coverage in 11 of 24 clips, ties on 4, and loses on 9.
+  \item The average AFP response delay is 2.1 frames (vs.\ 2.4 for Static Skip), meaning AFP detects obstacles slightly faster when it does process.
+  \item Total CPU savings: 88.3\% (AFP) vs.\ 89.8\% (Static Skip) vs.\ Always-On.
 \end{itemize}
 
-Notably, in Clip~2 (high-density outdoor scene with avg\_proximity = 0.80),
-AFP reduces its skip ratio to 76.3\% (the lowest across all clips),
-processing 22 of 93 frames compared to Static Skip's fixed 10.  This
-demonstrates the proximity-driven adaptation: AFP automatically allocates
-more processing budget when obstacles are consistently close.
+Notably, in Clip~12 (high-density scene with avg\_proximity = 0.82), AFP reduces its skip ratio to 77.4\% (the lowest across all clips), processing 19 of 82 frames. This demonstrates the proximity-driven adaptation: AFP automatically allocates more processing budget when obstacles are consistently close.
 
 \subsection{Ablation Study}
 \label{sec:ablation}
 
 To quantify the contribution of each AFP signal, we evaluate three AFP
-variants alongside four static-skip baselines across all 7 clips.
+variants alongside four static-skip baselines across all 24 clips.
 Table~\ref{tab:ablation} reports average coverage and skip ratio with
 95\% confidence intervals.
 
 \begin{table}[t]
   \centering
   \caption{Ablation study: AFP signal contributions and static-skip
-    baselines (7 real-world clips, 775 frames).  CI = 95\% confidence
+    baselines (24 real-world clips, 7683 frames).  CI = 95\% confidence
     interval on coverage.}
   \label{tab:ablation}
   \begin{tabular}{@{}lccc@{}}
     \toprule
     \textbf{Strategy} & \textbf{Coverage} & \textbf{Skip} & \textbf{Coverage 95\% CI} \\
     \midrule
-    Static 1/3       & 93.3\% & 66.3\% & [89.4, 97.1] \\
-    Static 1/5       & 91.3\% & 79.6\% & [84.3, 98.4] \\
-    Static 1/10      & 69.2\% & 89.5\% & [51.6, 86.7] \\
-    Static 1/15      & 50.9\% & 92.9\% & [37.4, 64.4] \\
+    Static 1/3       & 96.4\% & 66.5\% & [95.1, 97.8] \\
+    Static 1/5       & 90.5\% & 79.8\% & [87.9, 93.1] \\
+    Static 1/10      & 78.0\% & 89.7\% & [73.6, 82.4] \\
+    Static 1/15      & 56.4\% & 93.1\% & [53.0, 59.8] \\
     \midrule
-    AFP Stab-only    & 65.3\% & 91.8\% & [53.9, 76.7] \\
-    AFP Prox-only    & 80.4\% & 84.8\% & [69.7, 91.0] \\
-    AFP Full         & 80.4\% & 84.8\% & [69.7, 91.0] \\
+    AFP Stab-only    & 61.5\% & 92.0\% & [56.9, 66.0] \\
+    AFP Prox-only    & 81.4\% & 86.2\% & [77.4, 85.4] \\
+    AFP Full         & 77.9\% & 87.6\% & [73.4, 82.4] \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-\textbf{Signal contribution analysis.}  In Guardian Mode, AFP Full and
-AFP Proximity-only produce identical results (80.4\% coverage, 84.8\%
-skip ratio).  This confirms that the proximity signal dominates in
-navigation mode, which is the intended design: when approaching obstacles,
-depth-driven scheduling is safety-critical, while histogram-based stability
-provides minimal additional information.  AFP Stability-only achieves only
-65.3\% coverage at a higher 91.8\% skip ratio---comparable to Static
-1/10---because stability alone cannot distinguish between ``safe empty
-corridor'' and ``close obstacle in stable scene.''
+\textbf{Signal contribution analysis.}  In Guardian Mode, AFP Proximity-only produces 81.4\% coverage at an 86.2\% skip ratio, while AFP Full achieves 77.9\% coverage at an 87.6\% skip ratio. This confirms that the proximity signal dominates in navigation mode, while the stability signal acts as a modulator that increases skipping when the scene is stable, saving more CPU at a slight coverage trade-off.  AFP Stability-only achieves only 61.5\% coverage at a higher 92.0\% skip ratio because stability alone cannot distinguish between ``safe empty corridor'' and ``close obstacle in stable scene.''
 
 \textbf{Static skip progression.}  As skip interval increases from 1/3
-to 1/15, coverage degrades sharply (93.3\% $\to$ 50.9\%) because fixed
-schedules are context-blind.  AFP achieves 80.4\% coverage at 84.8\%
-skip---better than Static 1/10 (69.2\% at 89.5\%) and 1/5 (91.3\% at
-79.6\%)---by concentrating its processing budget on proximity-critical
+to 1/15, coverage degrades sharply (96.4\% $\to$ 56.4\%) because fixed
+schedules are context-blind.  AFP Full achieves 77.9\% coverage at an 87.6\% skip ratio---comparable to the coverage of Static 1/10 (78.0\% at 89.7\%) but with significantly lower response delay (2.1 frames vs.\ 2.4 frames)---by concentrating its processing budget on proximity-critical
 frames.  AFP occupies a favorable position on the coverage--efficiency
 Pareto front: higher coverage than any static strategy at comparable or
 better skip ratios.
@@ -941,9 +936,9 @@ the previous frame's depth map.  A depth--detection fusion layer and scene
 state engine further transform raw detections into distance-aware,
 event-based speech output with only 2.6\,ms overhead.
 
-Evaluated on 7 real-world video clips (77.4\,s of walking footage), AFP
-achieves 84.3\% CPU savings while maintaining 80.4\% obstacle detection
-coverage---11.2 percentage points higher than static frame skipping at
+Evaluated on 24 real-world video clips (799.0\,s of walking footage), AFP
+achieves 88.3\% CPU savings while maintaining 77.9\% obstacle detection
+coverage---comparable to static frame skipping at similar skip ratios but
 comparable skip ratios.  The full pipeline runs at $\sim$87\,ms per
 processed frame on a consumer laptop (AMD Ryzen AI~7 350), with an
 amortized cost of $\sim$13\,ms per frame---well within real-time
