@@ -194,6 +194,160 @@ def run_random_skip(frames: list, skip_prob: float = 0.85, seed: int = 42) -> di
     }
 
 
+def run_optical_flow_skip(frames: list, threshold: float = 0.5, max_skip: int = 15, min_skip: int = 2) -> dict:
+    """Run optical flow scheduling baseline.
+
+    Uses dense optical flow (Farneback) on downscaled grayscale frames.
+    If flow magnitude exceeds the threshold, it triggers frame processing.
+    Ensures bounds [min_skip, max_skip].
+    """
+    from blindaid.core.depth_onnx import DepthAnalyzerONNX
+    from blindaid.core.detector_onnx import ObjectDetectorONNX
+    from blindaid.core.depth_fusion import fuse_detections
+
+    depth = DepthAnalyzerONNX()
+    detector = ObjectDetectorONNX()
+    depth.compute_depth(frames[0])
+    detector.detect(frames[0])
+
+    latencies = []
+    all_detections = []
+    obstacle_classes = {"person", "bicycle", "car", "motorcycle", "bus", "train", "truck", "bench",
+                        "dog", "cat", "backpack", "umbrella", "handbag", "suitcase", "chair", "couch",
+                        "potted plant", "bed", "dining table", "toilet", "obstacle"}
+
+    prev_gray = None
+    skip_counter = 0
+
+    for i, frame in enumerate(frames):
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        gray_small = cv2.resize(gray, (160, 120))
+
+        should_process = False
+        if i == 0:
+            should_process = True
+        elif skip_counter >= max_skip:
+            should_process = True
+        elif skip_counter < min_skip:
+            should_process = False
+        else:
+            flow = cv2.calcOpticalFlowFarneback(prev_gray, gray_small, None, 0.5, 3, 15, 3, 5, 1.2, 0)
+            mag, _ = cv2.cartToPolar(flow[..., 0], flow[..., 1])
+            mean_flow = float(np.mean(mag))
+            if mean_flow > threshold:
+                should_process = True
+
+        if should_process:
+            t0 = time.perf_counter()
+            depth_map = depth.compute_depth(frame)
+            dets = detector.detect(frame)
+            elapsed = (time.perf_counter() - t0) * 1000
+            latencies.append(elapsed)
+
+            h, w = frame.shape[:2]
+            fused = fuse_detections(dets, depth_map, (h, w), enable_fallback=True)
+            for fd in fused:
+                all_detections.append({
+                    "frame": i, "class": fd.class_name,
+                    "confidence": fd.confidence, "region": fd.region,
+                })
+            skip_counter = 0
+        else:
+            skip_counter += 1
+
+        prev_gray = gray_small
+
+    obstacle_frames = set()
+    for det in all_detections:
+        if det["class"] in obstacle_classes:
+            obstacle_frames.add(det["frame"])
+
+    return {
+        "threshold": threshold,
+        "frames_processed": len(latencies),
+        "skip_ratio": 1.0 - len(latencies) / len(frames) if frames else 0,
+        "total_cpu_ms": sum(latencies),
+        "obstacle_frame_indices": sorted(obstacle_frames),
+        "all_detections": all_detections,
+    }
+
+
+def run_motion_skip(frames: list, threshold: float = 8.0, max_skip: int = 15, min_skip: int = 2) -> dict:
+    """Run motion-triggered scheduling baseline using frame difference.
+
+    If average absolute pixel difference exceeds threshold, it triggers frame processing.
+    Ensures bounds [min_skip, max_skip].
+    """
+    from blindaid.core.depth_onnx import DepthAnalyzerONNX
+    from blindaid.core.detector_onnx import ObjectDetectorONNX
+    from blindaid.core.depth_fusion import fuse_detections
+
+    depth = DepthAnalyzerONNX()
+    detector = ObjectDetectorONNX()
+    depth.compute_depth(frames[0])
+    detector.detect(frames[0])
+
+    latencies = []
+    all_detections = []
+    obstacle_classes = {"person", "bicycle", "car", "motorcycle", "bus", "train", "truck", "bench",
+                        "dog", "cat", "backpack", "umbrella", "handbag", "suitcase", "chair", "couch",
+                        "potted plant", "bed", "dining table", "toilet", "obstacle"}
+
+    prev_gray = None
+    skip_counter = 0
+
+    for i, frame in enumerate(frames):
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        gray_small = cv2.resize(gray, (160, 120))
+
+        should_process = False
+        if i == 0:
+            should_process = True
+        elif skip_counter >= max_skip:
+            should_process = True
+        elif skip_counter < min_skip:
+            should_process = False
+        else:
+            diff = cv2.absdiff(prev_gray, gray_small)
+            mean_diff = float(np.mean(diff))
+            if mean_diff > threshold:
+                should_process = True
+
+        if should_process:
+            t0 = time.perf_counter()
+            depth_map = depth.compute_depth(frame)
+            dets = detector.detect(frame)
+            elapsed = (time.perf_counter() - t0) * 1000
+            latencies.append(elapsed)
+
+            h, w = frame.shape[:2]
+            fused = fuse_detections(dets, depth_map, (h, w), enable_fallback=True)
+            for fd in fused:
+                all_detections.append({
+                    "frame": i, "class": fd.class_name,
+                    "confidence": fd.confidence, "region": fd.region,
+                })
+            skip_counter = 0
+        else:
+            skip_counter += 1
+
+        prev_gray = gray_small
+
+    obstacle_frames = set()
+    for det in all_detections:
+        if det["class"] in obstacle_classes:
+            obstacle_frames.add(det["frame"])
+
+    return {
+        "threshold": threshold,
+        "frames_processed": len(latencies),
+        "skip_ratio": 1.0 - len(latencies) / len(frames) if frames else 0,
+        "total_cpu_ms": sum(latencies),
+        "obstacle_frame_indices": sorted(obstacle_frames),
+        "all_detections": all_detections,
+    }
+
+
 def run_afp_variant(frames: list, variant: str = "full") -> dict:
     """Run AFP with different signal combinations.
     
@@ -433,6 +587,30 @@ def main():
         }
         print(f"    Coverage: {cov['coverage']:.1%}, Skip: {rs['skip_ratio']:.1%}")
 
+        # Optical Flow baseline
+        print(f"  Running Optical Flow Skip (thr=0.5)...")
+        of = run_optical_flow_skip(frames, threshold=0.5, max_skip=15, min_skip=2)
+        cov = compute_coverage(gt, of)
+        clip_result["optical_flow_skip"] = {
+            "skip_ratio": of["skip_ratio"],
+            "coverage": cov["coverage"],
+            "cpu_ms": of["total_cpu_ms"],
+            "frames_processed": of["frames_processed"],
+        }
+        print(f"    Coverage: {cov['coverage']:.1%}, Skip: {of['skip_ratio']:.1%}")
+
+        # Motion triggered baseline
+        print(f"  Running Motion-Triggered Skip (thr=8.0)...")
+        mot = run_motion_skip(frames, threshold=8.0, max_skip=15, min_skip=2)
+        cov = compute_coverage(gt, mot)
+        clip_result["motion_skip"] = {
+            "skip_ratio": mot["skip_ratio"],
+            "coverage": cov["coverage"],
+            "cpu_ms": mot["total_cpu_ms"],
+            "frames_processed": mot["frames_processed"],
+        }
+        print(f"    Coverage: {cov['coverage']:.1%}, Skip: {mot['skip_ratio']:.1%}")
+
         # AFP variants
         for variant in ["full", "proximity_only", "stability_only"]:
             print(f"  Running AFP ({variant})...")
@@ -465,13 +643,15 @@ def main():
         ("static_10", "Static 1/10"),
         ("static_15", "Static 1/15"),
         ("random_skip", "Random Skip"),
+        ("optical_flow_skip", "Optical Flow Skip"),
+        ("motion_skip", "Motion-Triggered Skip"),
         ("afp_proximity_only", "AFP Prox-only"),
         ("afp_stability_only", "AFP Stab-only"),
         ("afp_full", "AFP Full"),
     ]
 
-    print(f"\n{'Strategy':<20} {'Avg Coverage':>14} {'Avg Skip':>12} {'Avg CPU(ms)':>14}")
-    print("-" * 62)
+    print(f"\n{'Strategy':<25} {'Avg Coverage':>14} {'Avg Skip':>12} {'Avg CPU(ms)':>14}")
+    print("-" * 67)
 
     for key, label in strategies:
         coverages = [r[key]["coverage"] for r in all_results if key in r]
@@ -479,11 +659,11 @@ def main():
         cpus = [r[key]["cpu_ms"] for r in all_results if key in r]
 
         if coverages:
-            print(f"{label:<20} {statistics.mean(coverages):>13.1%} {statistics.mean(skips):>11.1%} {statistics.mean(cpus):>13.0f}")
+            print(f"{label:<25} {statistics.mean(coverages):>13.1%} {statistics.mean(skips):>11.1%} {statistics.mean(cpus):>13.0f}")
 
     # Confidence intervals (std dev)
-    print(f"\n{'Strategy':<20} {'Coverage Mean':>14} {'Coverage Std':>14} {'95% CI':>20}")
-    print("-" * 70)
+    print(f"\n{'Strategy':<25} {'Coverage Mean':>14} {'Coverage Std':>14} {'95% CI':>20}")
+    print("-" * 75)
 
     for key, label in strategies:
         coverages = [r[key]["coverage"] for r in all_results if key in r]
@@ -491,9 +671,9 @@ def main():
             mean_c = statistics.mean(coverages)
             std_c = statistics.stdev(coverages)
             ci = 1.96 * std_c / (len(coverages) ** 0.5)
-            print(f"{label:<20} {mean_c:>13.1%} {std_c:>13.3f} [{mean_c - ci:.1%}, {mean_c + ci:.1%}]")
+            print(f"{label:<25} {mean_c:>13.1%} {std_c:>13.3f} [{mean_c - ci:.1%}, {mean_c + ci:.1%}]")
         elif coverages:
-            print(f"{label:<20} {coverages[0]:>13.1%} {'N/A':>13} {'N/A':>20}")
+            print(f"{label:<25} {coverages[0]:>13.1%} {'N/A':>13} {'N/A':>20}")
 
 
 if __name__ == "__main__":

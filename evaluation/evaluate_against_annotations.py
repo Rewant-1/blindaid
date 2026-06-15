@@ -28,6 +28,8 @@ from evaluation.run_ablation import (
     run_static_skip,
     run_random_skip,
     run_afp_variant,
+    run_optical_flow_skip,
+    run_motion_skip,
 )
 
 OBSTACLE_CLASSES = {
@@ -62,11 +64,13 @@ def evaluate_strategies_on_annotations(
     print(f"Loaded {len(annotations)} annotations across {len(clip_annotations)} clips.")
     print("=" * 80)
 
-    # We evaluate 4 strategies
+    # We evaluate 6 strategies
     strategies = {
         "Always-On": lambda f: run_always_on_get_gt(f),
         "Static 1/10": lambda f: run_static_skip(f, 10),
         "Random (p=0.85)": lambda f: run_random_skip(f, 0.85, seed=42),
+        "Optical Flow": lambda f: run_optical_flow_skip(f, 0.5),
+        "Motion-Triggered": lambda f: run_motion_skip(f, 8.0),
         "AFP Full (ours)": lambda f: run_afp_variant(f, "full"),
     }
 

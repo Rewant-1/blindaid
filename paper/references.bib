@@ -1,6 +1,6 @@
 % =============================================================================
-% References for: Adaptive Frame Processing for Resource-Efficient
-%                  Multi-Modal Assistive Vision
+% References for: Adaptive Frame Processing: Latency-Bounded
+%                  Temporal Scheduling for Multi-Modal Edge Inference
 % =============================================================================
 
 % --- Depth Estimation ---
@@ -12,14 +12,6 @@
   year      = {2020}
 }
 
-@article{ranftl2021dpt,
-  title   = {Vision Transformers for Dense Prediction},
-  author  = {Ranftl, Ren{\'e} and Bochkovskiy, Alexey and Koltun, Vladlen},
-  journal = {IEEE/CVF International Conference on Computer Vision (ICCV)},
-  pages   = {12179--12188},
-  year    = {2021}
-}
-
 % --- Object Detection ---
 @misc{jocher2023yolov8,
   title        = {Ultralytics {YOLOv8}},
@@ -27,102 +19,6 @@
   year         = {2023},
   howpublished = {\url{https://github.com/ultralytics/ultralytics}},
   note         = {Accessed: 2025-01-15}
-}
-
-@inproceedings{redmon2016yolo,
-  title     = {You Only Look Once: Unified, Real-Time Object Detection},
-  author    = {Redmon, Joseph and Divvala, Santosh and Girshick, Ross and Farhadi, Ali},
-  booktitle = {IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
-  pages     = {779--788},
-  year      = {2016}
-}
-
-% --- OCR ---
-@misc{paddleocr2020,
-  title        = {{PaddleOCR}: Awesome Multilingual {OCR} Toolkits Based on {PaddlePaddle}},
-  author       = {{PaddlePaddle Authors}},
-  year         = {2020},
-  howpublished = {\url{https://github.com/PaddlePaddle/PaddleOCR}},
-  note         = {Accessed: 2025-01-15}
-}
-
-@misc{rapidocr2023,
-  title        = {{RapidOCR}: Cross-Platform {OCR} Library Based on {ONNX Runtime}},
-  author       = {{RapidAI}},
-  year         = {2023},
-  howpublished = {\url{https://github.com/RapidAI/RapidOCR}},
-  note         = {Accessed: 2025-01-15}
-}
-
-% --- ONNX Runtime ---
-@misc{onnxruntime2019,
-  title        = {{ONNX Runtime}: Cross-Platform, High Performance {ML} Inferencing and Training Accelerator},
-  author       = {{Microsoft}},
-  year         = {2019},
-  howpublished = {\url{https://onnxruntime.ai/}},
-  note         = {Accessed: 2025-01-15}
-}
-
-% --- Vision-Language Models ---
-@inproceedings{li2022blip,
-  title     = {{BLIP}: Bootstrapping Language-Image Pre-Training for Unified Vision-Language Understanding and Generation},
-  author    = {Li, Junnan and Li, Dongxu and Xiong, Caiming and Hoi, Steven},
-  booktitle = {International Conference on Machine Learning (ICML)},
-  pages     = {12888--12900},
-  year      = {2022}
-}
-
-@inproceedings{li2023blip2,
-  title     = {{BLIP-2}: Bootstrapping Language-Image Pre-Training with Frozen Image Encoders and Large Language Models},
-  author    = {Li, Junnan and Li, Dongxu and Savarese, Silvio and Hoi, Steven},
-  booktitle = {International Conference on Machine Learning (ICML)},
-  pages     = {19730--19742},
-  year      = {2023}
-}
-
-% --- Assistive Vision Systems ---
-@article{kuriakose2022assistive,
-  title   = {Tools and Technologies for Blind and Visually Impaired Navigation Support: A Review},
-  author  = {Kuriakose, Blesson and Shrestha, Raju and Sandnes, Frode Eika},
-  journal = {IETE Technical Review},
-  volume  = {39},
-  number  = {1},
-  pages   = {3--18},
-  year    = {2022}
-}
-
-@article{tapu2014assistive,
-  title   = {A Smartphone-Based Obstacle Detection and Classification System for Assisting Visually Impaired People},
-  author  = {Tapu, Ruxandra and Mocanu, Bogdan and Zaharia, Titus},
-  journal = {IEEE/CVF International Conference on Computer Vision Workshops (ICCVW)},
-  pages   = {444--451},
-  year    = {2014}
-}
-
-@article{real2019navigation,
-  title   = {Navigation Systems for the Blind and Visually Impaired: Past Work, Challenges, and Open Problems},
-  author  = {Real, Santiago and Araujo, Alvaro},
-  journal = {Sensors},
-  volume  = {19},
-  number  = {15},
-  pages   = {3404},
-  year    = {2019}
-}
-
-@inproceedings{yang2018unifying,
-  title     = {Unifying Blind Face Restoration and Quality Assessment via Degradation and Quality Adaptive Transformers},
-  author    = {Yang, Tao and Ren, Peiran and Xie, Xuansong and Zhang, Lei},
-  booktitle = {IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
-  year      = {2018},
-  note      = {Representative of face detection in assistive contexts}
-}
-
-@inproceedings{gurari2018vizwiz,
-  title     = {{VizWiz} Grand Challenge: Answering Visual Questions from Blind People},
-  author    = {Gurari, Danna and Li, Qing and Stangl, Abigale J. and Guo, Anhong and Lin, Chi and Grauman, Kristen and Luo, Jiebo and Bigham, Jeffrey P.},
-  booktitle = {IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
-  pages     = {3608--3617},
-  year      = {2018}
 }
 
 % --- Adaptive Computation ---
@@ -158,6 +54,77 @@
   year      = {2017}
 }
 
+% --- Adaptive Video Inference ---
+@inproceedings{wu2019adaframe,
+  title     = {{AdaFrame}: Adaptive Frame Selection for Fast Video Recognition},
+  author    = {Wu, Zuxuan and Xiong, Caiming and Yu, Chih-Yao and Hwang, En-Shiun Annie and Davis, Larry S. and Grauman, Kristen},
+  booktitle = {IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
+  pages     = {1278--1287},
+  year      = {2019}
+}
+
+@inproceedings{ghodrati2021frameexit,
+  title     = {{FrameExit}: Conditional Early Exiting for Efficient Video Recognition},
+  author    = {Ghodrati, Amir and Bejnordi, Babak Ehteshami and Habibian, Amirhossein},
+  booktitle = {IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
+  pages     = {15608--15618},
+  year      = {2021}
+}
+
+@inproceedings{habibian2021skip,
+  title     = {Skip-Convolutions for Efficient Video Processing},
+  author    = {Habibian, Amirhossein and Abati, Davide and Cohen, Taco S. and Bejnordi, Babak Ehteshami},
+  booktitle = {IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
+  pages     = {2695--2704},
+  year      = {2021}
+}
+
+@inproceedings{korbar2019scsampler,
+  title={SCSampler: Sampling Salient Clips from Video for Efficient Action Recognition},
+  author={Korbar, Bruno and Tran, Du and Torresani, Lorenzo},
+  booktitle={Proceedings of the IEEE/CVF International Conference on Computer Vision (ICCV)},
+  pages={6232--6242},
+  year={2019}
+}
+
+@inproceedings{xie2021ocsampler,
+  author    = {Lin, Jintao and Duan, Haodong and Chen, Kai and Lin, Dahua and Wang, Limin},
+  title     = {OCSampler: Compressing Videos to One Clip With Single-Step Sampling},
+  booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
+  year      = {2022},
+  pages     = {8945-8954}
+}
+
+@inproceedings{smart2020smart,
+  title={{SMART} Frame Selection for Action Recognition},
+  author={Gowda, Shreyank N and Rohrbach, Marcus and Sevilla-Lara, Laura},
+  booktitle={Proceedings of the AAAI Conference on Artificial Intelligence},
+  pages={1623--1631},
+  year={2021}
+}
+
+@inproceedings{meng2020arnet,
+  author    = {Meng, Yue and Lin, Chung-Ching and Panda, Rameswar and Sattigeri, Prasanna and Karlinsky, Leonid and Oliva, Aude and Saenko, Kate and Feris, Rogerio},
+  title     = {{AR-Net}: Adaptive Frame Resolution for Efficient Action Recognition},
+  booktitle = {European Conference on Computer Vision (ECCV)},
+  year      = {2020},
+  pages     = {86--104}
+}
+
+@inproceedings{qi2019liteeval,
+  title={{LiteEval}: A Coarse-to-Fine Framework for Resource Efficient Video Recognition},
+  author={Wu, Zuxuan and Xiong, Caiming and Ma, Chih-Yao and Socher, Richard and Davis, Larry S},
+  booktitle={Advances in Neural Information Processing Systems (NeurIPS)},
+  year={2019}
+}
+
+@inproceedings{han2021adafuse,
+  title={{AdaFuse}: Adaptive Temporal Fusion Network for Efficient Action Recognition},
+  author={Meng, Yue and Panda, Rameswar and Lin, Chung-Ching and Sattigeri, Prasanna and Karlinsky, Leonid and Saenko, Kate and Oliva, Aude and Feris, Rogerio},
+  booktitle={International Conference on Learning Representations (ICLR)},
+  year={2021}
+}
+
 % --- Edge Deployment and Model Optimization ---
 @article{howard2017mobilenets,
   title   = {{MobileNets}: Efficient Convolutional Neural Networks for Mobile Vision Applications},
@@ -189,27 +156,11 @@
   year      = {2015}
 }
 
-% --- Template / Rule-Based NLG ---
-@article{reiter2000nlg,
-  title     = {Building Natural Language Generation Systems},
-  author    = {Reiter, Ehud and Dale, Robert},
-  journal   = {Cambridge University Press},
-  year      = {2000}
-}
-
-% --- Histogram Comparison ---
-@book{bradski2008opencv,
-  title     = {Learning {OpenCV}: Computer Vision with the {OpenCV} Library},
-  author    = {Bradski, Gary and Kaehler, Adrian},
-  publisher = {O'Reilly Media},
-  year      = {2008}
-}
-
-% --- Multi-Object Tracking ---
-@inproceedings{zhang2022bytetrack,
-  title     = {{ByteTrack}: Multi-Object Tracking by Associating Every Detection Box},
-  author    = {Zhang, Yifu and Sun, Peize and Jiang, Yi and Yu, Dongdong and Weng, Fang and Yuan, Zehuan and Luo, Ping and Liu, Wenyu and Wang, Xinggang},
-  booktitle = {European Conference on Computer Vision (ECCV)},
-  pages     = {1--21},
-  year      = {2022}
+% --- Runtime ---
+@misc{onnxruntime2019,
+  title        = {{ONNX Runtime}: Cross-Platform, High Performance {ML} Inferencing and Training Accelerator},
+  author       = {{Microsoft}},
+  year         = {2019},
+  howpublished = {\url{https://onnxruntime.ai/}},
+  note         = {Accessed: 2025-01-15}
 }
