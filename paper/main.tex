@@ -56,8 +56,9 @@ dependency between scheduling decisions and depth computation
 without auxiliary policy networks. On 24 real-world video sequences
 (7,683 frames) with CPU-only ONNX inference, AFP achieves an
 87.6\% frame skip ratio with detection coverage matching static
-1/10 subsampling ($p = 0.79$, Wilcoxon signed-rank), while
-bounding worst-case proximity response latency at 100\,ms compared
+1/10 subsampling (TOST equivalence, $p < 0.001$,
+$\delta{=}{\pm}5$\,pp), while
+bounding worst-case proximity response latency at 200\,ms compared
 to 900\,ms for static and unbounded latency for motion-triggered
 baselines. The amortized per-frame cost is 10.8\,ms on a consumer
 CPU.
@@ -121,12 +122,13 @@ This paper makes three contributions:
     learned policy models.
   \item A formal analysis of worst-case response latency under
     static, motion-triggered, and adaptive scheduling, showing that
-    AFP bounds proximity latency at 100\,ms while static 1/10
+    AFP bounds proximity latency at 200\,ms while static 1/10
     incurs 900\,ms and motion-triggered approaches are unbounded.
   \item An empirical evaluation on 24 real-world video sequences
     (7,683 frames) showing that AFP achieves 87.6\% frame skip with
     detection coverage statistically equivalent to static
-    subsampling ($p = 0.79$, Wilcoxon signed-rank test).
+    subsampling (TOST equivalence, $p < 0.001$,
+    $\delta{=}{\pm}5$\,pp).
 \end{enumerate}
 
 All experiments use CPU-only inference via ONNX
@@ -408,16 +410,16 @@ AFP decouples worst-case latency from average compute savings.
 Under proximity override ($d_t > \tau_p$), AFP enforces
 $s_t = s_\text{min}$, bounding the worst-case response latency to:
 \begin{equation}
-  L_\text{AFP}^\text{worst} = \frac{s_\text{min} - 1}{f}
+  L_\text{AFP}^\text{worst} = \frac{s_\text{min}}{f}
   \label{eq:afp_latency}
 \end{equation}
 For $s_\text{min}{=}2$ and $f{=}10$\,fps,
-$L_\text{AFP}^\text{worst} = 100$\,ms---a $9\times$ improvement
+$L_\text{AFP}^\text{worst} = 200$\,ms---a $4.5\times$ improvement
 over static~1/10 and a finite bound where motion-triggered
 scheduling has none. Table~\ref{tab:latency_bounds} summarizes
 these characteristics. At a typical walking speed of 1.2\,m/s, the
 900\,ms delay of static scheduling allows 1.08\,m of undetected
-travel before the system reacts, while AFP limits this to 0.12\,m.
+travel before the system reacts, while AFP limits this to 0.24\,m.
 
 \begin{table}[t]
   \centering
@@ -430,7 +432,7 @@ travel before the system reacts, while AFP limits this to 0.12\,m.
       & \textbf{Skip (\%)} & \textbf{Dist.\ (m)} \\
     \midrule
     Always-On        & 0\,ms     & 0     & 0     \\
-    AFP Full         & 100\,ms   & 87.6  & 0.12  \\
+    AFP Full         & 200\,ms   & 87.6  & 0.24  \\
     Static 1/10      & 900\,ms   & 89.7  & 1.08  \\
     Motion-Triggered & $\infty$  & 69.8  & $\infty$ \\
     \bottomrule
@@ -546,16 +548,19 @@ effectively. AFP Full achieves a CEI of 6.30---over $2\times$ more
 efficient---by using depth to distinguish relevant proximity changes
 from background ego-motion. Critically, motion-triggered scheduling
 has no worst-case latency bound (Section~\ref{sec:latency}), while
-AFP guarantees 100\,ms.
+AFP guarantees 200\,ms.
 
 \textbf{AFP vs.\ static baselines.} Static 1/10 achieves 78.0\%
 coverage at 89.7\% skip with a CEI of 7.60, but imposes a fixed
 900\,ms worst-case delay. AFP Full achieves comparable coverage
 (77.9\%) at 87.6\% skip, with worst-case proximity latency bounded
-at 100\,ms. A Wilcoxon signed-rank test across the 24 sequences
-confirms no statistically significant difference in coverage
-($p = 0.79$). The average response delay drops from 2.4~frames
-(static) to 2.1~frames (AFP).
+at 200\,ms. A two one-sided tests (TOST) equivalence procedure
+with margin $\delta{=}{\pm}5$ percentage points confirms that AFP
+and Static~1/10 achieve statistically equivalent coverage
+($p < 0.001$). The mean coverage difference is $-0.07$\,pp
+(95\%~CI: $[-2.21, 2.07]$\,pp) with negligible effect size
+(Cohen's $d = -0.014$). The average response delay drops from
+2.4~frames (static) to 2.1~frames (AFP).
 
 \textbf{Signal contributions.} AFP Proximity-only achieves 81.4\%
 coverage at 86.2\% skip. Adding the stability signal (AFP Full)
@@ -585,11 +590,12 @@ Conversely, Clip~10 (sparse environment with brief obstacle
 appearances) shows AFP's weakness: the one-frame feedback delay
 causes it to miss transient events, yielding 57.3\% coverage.
 
-Across all 24 sequences, a Wilcoxon signed-rank test confirms no
-statistically significant difference between AFP and Static~1/10
-coverage ($p = 0.79$). The average response delay is 2.1~frames
-(AFP) versus 2.4~frames (Static~1/10), with AFP's worst-case
-proximity delay bounded at 1~frame (100\,ms).
+Across all 24 sequences, a TOST equivalence test
+($\delta{=}{\pm}5$\,pp) confirms statistically equivalent coverage
+between AFP and Static~1/10 ($p < 0.001$; 95\%~CI of the mean
+difference: $[-2.21, 2.07]$\,pp). The average response delay is
+2.1~frames (AFP) versus 2.4~frames (Static~1/10), with AFP's
+worst-case proximity delay bounded at 2~frames (200\,ms).
 
 \begin{table}[t]
   \centering
@@ -658,7 +664,10 @@ of frames, suitable for open environments. The default ($\tau_p = 0.7$,
 $s_\text{max} = 15$) balances responsiveness against resource savings.
 These parameters are tunable without retraining, unlike learned
 scheduling policies that require re-optimization for each deployment
-scenario.
+scenario. Note that this analysis uses a controlled 100-frame sequence
+to isolate parameter effects; the full 24-sequence evaluation
+(Table~\ref{tab:comparison}) implicitly validates the default
+parameters under naturalistic conditions.
 
 
 % =============================================================================
@@ -690,7 +699,16 @@ formulation already matches static baselines. A learned policy
 could be substituted within the same framework to discover
 better strategies, particularly in complex environments.
 The system relies on monocular relative depth (MiDaS), providing
-approximate rather than metric distance estimates. While AFP Full
+approximate rather than metric distance estimates.
+Because MiDaS outputs relative depth normalized to $[0,1]$,
+the proximity threshold $\tau_p = 0.7$ does not correspond to a
+fixed physical distance and may require recalibration across scene
+types. Indoor corridors with uniform depth gradients produce
+different normalizations than open outdoor environments. However,
+the parameter sensitivity analysis (Table~\ref{tab:sensitivity})
+shows that AFP degrades gracefully across a wide $\tau_p$ range
+(0.5--0.9), providing a practical tuning envelope for deployment.
+While AFP Full
 achieves 77.9\% average coverage, approximately 22\% of detections
 are missed---concentrated during stable or far-field periods.
 Under close proximity, AFP increases sampling frequency to minimize
@@ -711,8 +729,8 @@ resolves the circular scheduling dependency without auxiliary
 models and concentrates compute on proximity-critical frames.
 Evaluated on 24 real-world sequences, AFP achieves 87.6\% frame
 skip while maintaining coverage equivalent to static subsampling
-and bounding worst-case proximity latency at 100\,ms---a
-$9\times$ reduction from the 900\,ms incurred by static~1/10.
+and bounding worst-case proximity latency at 200\,ms---a
+$4.5\times$ reduction from the 900\,ms incurred by static~1/10.
 The framework adds 2.6\,ms of scheduling overhead, requires no
 training, and is orthogonal to per-frame model optimizations.
 
