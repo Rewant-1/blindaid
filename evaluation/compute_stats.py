@@ -1,9 +1,10 @@
 """Statistical analysis for AFP paper: Wilcoxon + TOST equivalence + effect size."""
 import json
+from pathlib import Path
 import numpy as np
 from scipy.stats import wilcoxon, ttest_1samp
 
-file_path = r'c:\blindaid\evaluation\results_video_evaluation.json'
+file_path = Path(__file__).resolve().parent / "results_video_evaluation.json"
 
 with open(file_path, 'r') as f:
     data = json.load(f)

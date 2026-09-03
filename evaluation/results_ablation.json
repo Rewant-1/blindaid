@@ -1,0 +1,1586 @@
+[
+  {
+    "clip": "clip1.mp4",
+    "total_frames": 151,
+    "gt_obstacle_frames": 124,
+    "gt_cpu_ms": 13766.886099925614,
+    "static_3": {
+      "skip_ratio": 0.6622516556291391,
+      "coverage": 0.9596774193548387,
+      "cpu_ms": 5045.444399947883,
+      "frames_processed": 51
+    },
+    "static_5": {
+      "skip_ratio": 0.794701986754967,
+      "coverage": 0.8387096774193549,
+      "cpu_ms": 2811.361100000795,
+      "frames_processed": 31
+    },
+    "static_10": {
+      "skip_ratio": 0.8940397350993378,
+      "coverage": 0.6854838709677419,
+      "cpu_ms": 1522.7894999989076,
+      "frames_processed": 16
+    },
+    "static_15": {
+      "skip_ratio": 0.9271523178807947,
+      "coverage": 0.49193548387096775,
+      "cpu_ms": 1097.8295999957481,
+      "frames_processed": 11
+    },
+    "random_skip": {
+      "skip_ratio": 0.8211920529801324,
+      "coverage": 0.7419354838709677,
+      "cpu_ms": 2724.850599945057,
+      "frames_processed": 27
+    },
+    "optical_flow_skip": {
+      "skip_ratio": 0.6622516556291391,
+      "coverage": 0.9596774193548387,
+      "cpu_ms": 4658.688600073219,
+      "frames_processed": 51
+    },
+    "motion_skip": {
+      "skip_ratio": 0.6622516556291391,
+      "coverage": 0.9596774193548387,
+      "cpu_ms": 4663.5379000072135,
+      "frames_processed": 51
+    },
+    "afp_full": {
+      "skip_ratio": 0.880794701986755,
+      "coverage": 0.7419354838709677,
+      "cpu_ms": 1564.0770999598317,
+      "frames_processed": 18
+    },
+    "afp_proximity_only": {
+      "skip_ratio": 0.880794701986755,
+      "coverage": 0.7096774193548387,
+      "cpu_ms": 1695.7099999999627,
+      "frames_processed": 18
+    },
+    "afp_stability_only": {
+      "skip_ratio": 0.9139072847682119,
+      "coverage": 0.6048387096774194,
+      "cpu_ms": 1119.551900002989,
+      "frames_processed": 13
+    }
+  },
+  {
+    "clip": "clip10.mp4",
+    "total_frames": 324,
+    "gt_obstacle_frames": 298,
+    "gt_cpu_ms": 30350.53819991299,
+    "static_3": {
+      "skip_ratio": 0.6666666666666667,
+      "coverage": 0.9899328859060402,
+      "cpu_ms": 9849.790699969162,
+      "frames_processed": 108
+    },
+    "static_5": {
+      "skip_ratio": 0.7993827160493827,
+      "coverage": 0.9429530201342282,
+      "cpu_ms": 5499.337800050853,
+      "frames_processed": 65
+    },
+    "static_10": {
+      "skip_ratio": 0.8981481481481481,
+      "coverage": 0.8154362416107382,
+      "cpu_ms": 2800.8756000635913,
+      "frames_processed": 33
+    },
+    "static_15": {
+      "skip_ratio": 0.9320987654320988,
+      "coverage": 0.5838926174496645,
+      "cpu_ms": 1801.0626000032062,
+      "frames_processed": 22
+    },
+    "random_skip": {
+      "skip_ratio": 0.8395061728395061,
+      "coverage": 0.7885906040268457,
+      "cpu_ms": 4939.528699964285,
+      "frames_processed": 52
+    },
+    "optical_flow_skip": {
+      "skip_ratio": 0.6666666666666667,
+      "coverage": 0.9899328859060402,
+      "cpu_ms": 9750.242999885813,
+      "frames_processed": 108
+    },
+    "motion_skip": {
+      "skip_ratio": 0.7839506172839507,
+      "coverage": 0.8557046979865772,
+      "cpu_ms": 6377.136399969459,
+      "frames_processed": 70
+    },
+    "afp_full": {
+      "skip_ratio": 0.8919753086419753,
+      "coverage": 0.8154362416107382,
+      "cpu_ms": 2874.4457000284456,
+      "frames_processed": 35
+    },
+    "afp_proximity_only": {
+      "skip_ratio": 0.8734567901234568,
+      "coverage": 0.87248322147651,
+      "cpu_ms": 3364.2276999598835,
+      "frames_processed": 41
+    },
+    "afp_stability_only": {
+      "skip_ratio": 0.9259259259259259,
+      "coverage": 0.6375838926174496,
+      "cpu_ms": 2100.044299979345,
+      "frames_processed": 24
+    }
+  },
+  {
+    "clip": "clip11.mp4",
+    "total_frames": 278,
+    "gt_obstacle_frames": 250,
+    "gt_cpu_ms": 24097.731500063674,
+    "static_3": {
+      "skip_ratio": 0.6654676258992807,
+      "coverage": 0.98,
+      "cpu_ms": 8880.627199992887,
+      "frames_processed": 93
+    },
+    "static_5": {
+      "skip_ratio": 0.7985611510791367,
+      "coverage": 0.944,
+      "cpu_ms": 5015.50669997232,
+      "frames_processed": 56
+    },
+    "static_10": {
+      "skip_ratio": 0.8992805755395683,
+      "coverage": 0.82,
+      "cpu_ms": 2591.1868999392027,
+      "frames_processed": 28
+    },
+    "static_15": {
+      "skip_ratio": 0.9316546762589928,
+      "coverage": 0.508,
+      "cpu_ms": 1722.8853000415256,
+      "frames_processed": 19
+    },
+    "random_skip": {
+      "skip_ratio": 0.8453237410071942,
+      "coverage": 0.792,
+      "cpu_ms": 3795.4542000225047,
+      "frames_processed": 43
+    },
+    "optical_flow_skip": {
+      "skip_ratio": 0.6654676258992807,
+      "coverage": 0.98,
+      "cpu_ms": 8386.772599915275,
+      "frames_processed": 93
+    },
+    "motion_skip": {
+      "skip_ratio": 0.697841726618705,
+      "coverage": 0.96,
+      "cpu_ms": 7875.01649990736,
+      "frames_processed": 84
+    },
+    "afp_full": {
+      "skip_ratio": 0.8741007194244604,
+      "coverage": 0.908,
+      "cpu_ms": 2921.2155000132043,
+      "frames_processed": 35
+    },
+    "afp_proximity_only": {
+      "skip_ratio": 0.8669064748201438,
+      "coverage": 0.852,
+      "cpu_ms": 3807.2639999591047,
+      "frames_processed": 37
+    },
+    "afp_stability_only": {
+      "skip_ratio": 0.9280575539568345,
+      "coverage": 0.636,
+      "cpu_ms": 1771.5518999902997,
+      "frames_processed": 20
+    }
+  },
+  {
+    "clip": "clip12.mp4",
+    "total_frames": 364,
+    "gt_obstacle_frames": 270,
+    "gt_cpu_ms": 33805.59680027363,
+    "static_3": {
+      "skip_ratio": 0.6648351648351649,
+      "coverage": 0.9666666666666667,
+      "cpu_ms": 11548.484399871086,
+      "frames_processed": 122
+    },
+    "static_5": {
+      "skip_ratio": 0.7994505494505495,
+      "coverage": 0.9,
+      "cpu_ms": 6983.543499998632,
+      "frames_processed": 73
+    },
+    "static_10": {
+      "skip_ratio": 0.8983516483516484,
+      "coverage": 0.7814814814814814,
+      "cpu_ms": 3480.5160000250908,
+      "frames_processed": 37
+    },
+    "static_15": {
+      "skip_ratio": 0.9313186813186813,
+      "coverage": 0.6592592592592592,
+      "cpu_ms": 2614.036499959184,
+      "frames_processed": 25
+    },
+    "random_skip": {
+      "skip_ratio": 0.8351648351648352,
+      "coverage": 0.7518518518518519,
+      "cpu_ms": 5403.010099937092,
+      "frames_processed": 60
+    },
+    "optical_flow_skip": {
+      "skip_ratio": 0.6703296703296704,
+      "coverage": 0.9518518518518518,
+      "cpu_ms": 11116.257100002258,
+      "frames_processed": 120
+    },
+    "motion_skip": {
+      "skip_ratio": 0.6840659340659341,
+      "coverage": 0.937037037037037,
+      "cpu_ms": 11272.270900051808,
+      "frames_processed": 115
+    },
+    "afp_full": {
+      "skip_ratio": 0.8626373626373627,
+      "coverage": 0.7111111111111111,
+      "cpu_ms": 4505.421200025012,
+      "frames_processed": 50
+    },
+    "afp_proximity_only": {
+      "skip_ratio": 0.8406593406593407,
+      "coverage": 0.7407407407407407,
+      "cpu_ms": 5151.872900009039,
+      "frames_processed": 58
+    },
+    "afp_stability_only": {
+      "skip_ratio": 0.9258241758241759,
+      "coverage": 0.6296296296296297,
+      "cpu_ms": 2154.7131999395788,
+      "frames_processed": 27
+    }
+  },
+  {
+    "clip": "clip13.mp4",
+    "total_frames": 444,
+    "gt_obstacle_frames": 307,
+    "gt_cpu_ms": 41611.94189998787,
+    "static_3": {
+      "skip_ratio": 0.6666666666666667,
+      "coverage": 1.0,
+      "cpu_ms": 13462.266899921815,
+      "frames_processed": 148
+    },
+    "static_5": {
+      "skip_ratio": 0.7995495495495495,
+      "coverage": 0.9250814332247557,
+      "cpu_ms": 7988.50700003095,
+      "frames_processed": 89
+    },
+    "static_10": {
+      "skip_ratio": 0.8986486486486487,
+      "coverage": 0.8013029315960912,
+      "cpu_ms": 4465.890099978424,
+      "frames_processed": 45
+    },
+    "static_15": {
+      "skip_ratio": 0.9324324324324325,
+      "coverage": 0.50814332247557,
+      "cpu_ms": 2872.3755999817513,
+      "frames_processed": 30
+    },
+    "random_skip": {
+      "skip_ratio": 0.8220720720720721,
+      "coverage": 0.7133550488599348,
+      "cpu_ms": 7284.05210004712,
+      "frames_processed": 79
+    },
+    "optical_flow_skip": {
+      "skip_ratio": 0.6689189189189189,
+      "coverage": 0.9674267100977199,
+      "cpu_ms": 12498.658600001363,
+      "frames_processed": 147
+    },
+    "motion_skip": {
+      "skip_ratio": 0.6846846846846847,
+      "coverage": 0.9348534201954397,
+      "cpu_ms": 12418.008599997847,
+      "frames_processed": 140
+    },
+    "afp_full": {
+      "skip_ratio": 0.8783783783783784,
+      "coverage": 0.7980456026058632,
+      "cpu_ms": 4972.840400034329,
+      "frames_processed": 54
+    },
+    "afp_proximity_only": {
+      "skip_ratio": 0.8626126126126126,
+      "coverage": 0.8403908794788274,
+      "cpu_ms": 5857.615400076611,
+      "frames_processed": 61
+    },
+    "afp_stability_only": {
+      "skip_ratio": 0.9189189189189189,
+      "coverage": 0.6156351791530945,
+      "cpu_ms": 3434.807199999341,
+      "frames_processed": 36
+    }
+  },
+  {
+    "clip": "clip14.mp4",
+    "total_frames": 341,
+    "gt_obstacle_frames": 295,
+    "gt_cpu_ms": 33233.73249996803,
+    "static_3": {
+      "skip_ratio": 0.6656891495601174,
+      "coverage": 0.976271186440678,
+      "cpu_ms": 11041.038700030185,
+      "frames_processed": 114
+    },
+    "static_5": {
+      "skip_ratio": 0.7976539589442815,
+      "coverage": 0.9559322033898305,
+      "cpu_ms": 5979.017599966028,
+      "frames_processed": 69
+    },
+    "static_10": {
+      "skip_ratio": 0.8973607038123167,
+      "coverage": 0.7966101694915254,
+      "cpu_ms": 3381.290599994827,
+      "frames_processed": 35
+    },
+    "static_15": {
+      "skip_ratio": 0.9325513196480939,
+      "coverage": 0.6203389830508474,
+      "cpu_ms": 2429.8876999819186,
+      "frames_processed": 23
+    },
+    "random_skip": {
+      "skip_ratio": 0.8328445747800587,
+      "coverage": 0.7627118644067796,
+      "cpu_ms": 5621.324999985518,
+      "frames_processed": 57
+    },
+    "optical_flow_skip": {
+      "skip_ratio": 0.6656891495601174,
+      "coverage": 0.976271186440678,
+      "cpu_ms": 13556.123699905584,
+      "frames_processed": 114
+    },
+    "motion_skip": {
+      "skip_ratio": 0.7126099706744868,
+      "coverage": 0.9050847457627119,
+      "cpu_ms": 10549.972099906881,
+      "frames_processed": 98
+    },
+    "afp_full": {
+      "skip_ratio": 0.8856304985337243,
+      "coverage": 0.7898305084745763,
+      "cpu_ms": 3681.562999947346,
+      "frames_processed": 39
+    },
+    "afp_proximity_only": {
+      "skip_ratio": 0.8651026392961877,
+      "coverage": 0.8813559322033898,
+      "cpu_ms": 4181.444999980158,
+      "frames_processed": 46
+    },
+    "afp_stability_only": {
+      "skip_ratio": 0.9208211143695014,
+      "coverage": 0.6305084745762712,
+      "cpu_ms": 2647.595900023589,
+      "frames_processed": 27
+    }
+  },
+  {
+    "clip": "clip15.mp4",
+    "total_frames": 303,
+    "gt_obstacle_frames": 196,
+    "gt_cpu_ms": 28766.172300020116,
+    "static_3": {
+      "skip_ratio": 0.6666666666666667,
+      "coverage": 0.923469387755102,
+      "cpu_ms": 8985.328699971433,
+      "frames_processed": 101
+    },
+    "static_5": {
+      "skip_ratio": 0.7986798679867987,
+      "coverage": 0.8928571428571429,
+      "cpu_ms": 5406.386599992402,
+      "frames_processed": 61
+    },
+    "static_10": {
+      "skip_ratio": 0.8976897689768977,
+      "coverage": 0.7704081632653061,
+      "cpu_ms": 2915.779999952065,
+      "frames_processed": 31
+    },
+    "static_15": {
+      "skip_ratio": 0.9306930693069306,
+      "coverage": 0.5612244897959183,
+      "cpu_ms": 2054.811499969219,
+      "frames_processed": 21
+    },
+    "random_skip": {
+      "skip_ratio": 0.834983498349835,
+      "coverage": 0.7806122448979592,
+      "cpu_ms": 4537.817500022356,
+      "frames_processed": 50
+    },
+    "optical_flow_skip": {
+      "skip_ratio": 0.6732673267326732,
+      "coverage": 0.923469387755102,
+      "cpu_ms": 9048.460400037584,
+      "frames_processed": 99
+    },
+    "motion_skip": {
+      "skip_ratio": 0.7161716171617162,
+      "coverage": 0.8928571428571429,
+      "cpu_ms": 7797.704599986901,
+      "frames_processed": 86
+    },
+    "afp_full": {
+      "skip_ratio": 0.8811881188118812,
+      "coverage": 0.7755102040816326,
+      "cpu_ms": 3018.3437999803573,
+      "frames_processed": 36
+    },
+    "afp_proximity_only": {
+      "skip_ratio": 0.8679867986798679,
+      "coverage": 0.8367346938775511,
+      "cpu_ms": 3354.851600000984,
+      "frames_processed": 40
+    },
+    "afp_stability_only": {
+      "skip_ratio": 0.9207920792079208,
+      "coverage": 0.5255102040816326,
+      "cpu_ms": 2080.9047999500763,
+      "frames_processed": 24
+    }
+  },
+  {
+    "clip": "clip16.mp4",
+    "total_frames": 306,
+    "gt_obstacle_frames": 181,
+    "gt_cpu_ms": 27136.592600028962,
+    "static_3": {
+      "skip_ratio": 0.6666666666666667,
+      "coverage": 0.9613259668508287,
+      "cpu_ms": 10064.312399932533,
+      "frames_processed": 102
+    },
+    "static_5": {
+      "skip_ratio": 0.7973856209150327,
+      "coverage": 0.8895027624309392,
+      "cpu_ms": 5556.750999880023,
+      "frames_processed": 62
+    },
+    "static_10": {
+      "skip_ratio": 0.8986928104575164,
+      "coverage": 0.7513812154696132,
+      "cpu_ms": 2790.711799985729,
+      "frames_processed": 31
+    },
+    "static_15": {
+      "skip_ratio": 0.9313725490196079,
+      "coverage": 0.5414364640883977,
+      "cpu_ms": 2388.4913000219967,
+      "frames_processed": 21
+    },
+    "random_skip": {
+      "skip_ratio": 0.8366013071895425,
+      "coverage": 0.712707182320442,
+      "cpu_ms": 4327.025499980664,
+      "frames_processed": 50
+    },
+    "optical_flow_skip": {
+      "skip_ratio": 0.6666666666666667,
+      "coverage": 0.9613259668508287,
+      "cpu_ms": 9341.509099976975,
+      "frames_processed": 102
+    },
+    "motion_skip": {
+      "skip_ratio": 0.673202614379085,
+      "coverage": 0.9337016574585635,
+      "cpu_ms": 8750.798300112365,
+      "frames_processed": 100
+    },
+    "afp_full": {
+      "skip_ratio": 0.8594771241830066,
+      "coverage": 0.7790055248618785,
+      "cpu_ms": 3786.649700065027,
+      "frames_processed": 43
+    },
+    "afp_proximity_only": {
+      "skip_ratio": 0.8431372549019608,
+      "coverage": 0.8784530386740331,
+      "cpu_ms": 4508.585599978687,
+      "frames_processed": 48
+    },
+    "afp_stability_only": {
+      "skip_ratio": 0.9150326797385621,
+      "coverage": 0.7569060773480663,
+      "cpu_ms": 2416.5641000145115,
+      "frames_processed": 26
+    }
+  },
+  {
+    "clip": "clip17.mp4",
+    "total_frames": 1277,
+    "gt_obstacle_frames": 823,
+    "gt_cpu_ms": 124529.69280029356,
+    "static_3": {
+      "skip_ratio": 0.6664056382145653,
+      "coverage": 0.9635479951397327,
+      "cpu_ms": 43265.97419999598,
+      "frames_processed": 426
+    },
+    "static_5": {
+      "skip_ratio": 0.7995301487862176,
+      "coverage": 0.9198055893074119,
+      "cpu_ms": 22946.41649989353,
+      "frames_processed": 256
+    },
+    "static_10": {
+      "skip_ratio": 0.8997650743931088,
+      "coverage": 0.7946537059538274,
+      "cpu_ms": 11316.142200070317,
+      "frames_processed": 128
+    },
+    "static_15": {
+      "skip_ratio": 0.93265465935787,
+      "coverage": 0.5382746051032807,
+      "cpu_ms": 7836.36810000462,
+      "frames_processed": 86
+    },
+    "random_skip": {
+      "skip_ratio": 0.8379013312451057,
+      "coverage": 0.7363304981773997,
+      "cpu_ms": 19311.29059990053,
+      "frames_processed": 207
+    },
+    "optical_flow_skip": {
+      "skip_ratio": 0.6781519185591229,
+      "coverage": 0.9659781287970839,
+      "cpu_ms": 36161.64319994277,
+      "frames_processed": 411
+    },
+    "motion_skip": {
+      "skip_ratio": 0.6961628817541112,
+      "coverage": 0.959902794653706,
+      "cpu_ms": 37376.981300185435,
+      "frames_processed": 388
+    },
+    "afp_full": {
+      "skip_ratio": 0.8958496476115897,
+      "coverage": 0.755771567436209,
+      "cpu_ms": 13375.083499980974,
+      "frames_processed": 133
+    },
+    "afp_proximity_only": {
+      "skip_ratio": 0.8786217697729053,
+      "coverage": 0.8007290400972054,
+      "cpu_ms": 14396.207700119703,
+      "frames_processed": 155
+    },
+    "afp_stability_only": {
+      "skip_ratio": 0.9224745497259201,
+      "coverage": 0.6476306196840826,
+      "cpu_ms": 8859.473300079117,
+      "frames_processed": 99
+    }
+  },
+  {
+    "clip": "clip18.mp4",
+    "total_frames": 295,
+    "gt_obstacle_frames": 171,
+    "gt_cpu_ms": 26621.86459999066,
+    "static_3": {
+      "skip_ratio": 0.6644067796610169,
+      "coverage": 0.9649122807017544,
+      "cpu_ms": 9440.88070007274,
+      "frames_processed": 99
+    },
+    "static_5": {
+      "skip_ratio": 0.8,
+      "coverage": 0.847953216374269,
+      "cpu_ms": 5754.373400050099,
+      "frames_processed": 59
+    },
+    "static_10": {
+      "skip_ratio": 0.8983050847457628,
+      "coverage": 0.6783625730994152,
+      "cpu_ms": 3031.3236999645596,
+      "frames_processed": 30
+    },
+    "static_15": {
+      "skip_ratio": 0.9322033898305084,
+      "coverage": 0.4093567251461988,
+      "cpu_ms": 1835.4242999776034,
+      "frames_processed": 20
+    },
+    "random_skip": {
+      "skip_ratio": 0.840677966101695,
+      "coverage": 0.7543859649122807,
+      "cpu_ms": 4216.941000006045,
+      "frames_processed": 47
+    },
+    "optical_flow_skip": {
+      "skip_ratio": 0.6677966101694915,
+      "coverage": 0.9707602339181286,
+      "cpu_ms": 9935.008900007233,
+      "frames_processed": 98
+    },
+    "motion_skip": {
+      "skip_ratio": 0.6915254237288135,
+      "coverage": 0.9590643274853801,
+      "cpu_ms": 8745.816999973613,
+      "frames_processed": 91
+    },
+    "afp_full": {
+      "skip_ratio": 0.8949152542372881,
+      "coverage": 0.5730994152046783,
+      "cpu_ms": 2825.549399974989,
+      "frames_processed": 31
+    },
+    "afp_proximity_only": {
+      "skip_ratio": 0.8949152542372881,
+      "coverage": 0.6140350877192983,
+      "cpu_ms": 3051.380999982939,
+      "frames_processed": 31
+    },
+    "afp_stability_only": {
+      "skip_ratio": 0.9186440677966101,
+      "coverage": 0.5029239766081871,
+      "cpu_ms": 2256.810399980168,
+      "frames_processed": 24
+    }
+  },
+  {
+    "clip": "clip19.mp4",
+    "total_frames": 264,
+    "gt_obstacle_frames": 198,
+    "gt_cpu_ms": 25892.378199787345,
+    "static_3": {
+      "skip_ratio": 0.6666666666666667,
+      "coverage": 0.9747474747474747,
+      "cpu_ms": 7991.14540006849,
+      "frames_processed": 88
+    },
+    "static_5": {
+      "skip_ratio": 0.7992424242424243,
+      "coverage": 0.9393939393939394,
+      "cpu_ms": 4755.749400021159,
+      "frames_processed": 53
+    },
+    "static_10": {
+      "skip_ratio": 0.8977272727272727,
+      "coverage": 0.8333333333333334,
+      "cpu_ms": 2394.260500004748,
+      "frames_processed": 27
+    },
+    "static_15": {
+      "skip_ratio": 0.9318181818181819,
+      "coverage": 0.5505050505050505,
+      "cpu_ms": 1628.2276999845635,
+      "frames_processed": 18
+    },
+    "random_skip": {
+      "skip_ratio": 0.8371212121212122,
+      "coverage": 0.7929292929292929,
+      "cpu_ms": 4062.2650000004796,
+      "frames_processed": 43
+    },
+    "optical_flow_skip": {
+      "skip_ratio": 0.6742424242424243,
+      "coverage": 0.9848484848484849,
+      "cpu_ms": 9879.786800011061,
+      "frames_processed": 86
+    },
+    "motion_skip": {
+      "skip_ratio": 0.6893939393939394,
+      "coverage": 0.9797979797979798,
+      "cpu_ms": 8409.988100029295,
+      "frames_processed": 82
+    },
+    "afp_full": {
+      "skip_ratio": 0.8598484848484849,
+      "coverage": 0.8535353535353535,
+      "cpu_ms": 3796.5283999947133,
+      "frames_processed": 37
+    },
+    "afp_proximity_only": {
+      "skip_ratio": 0.8484848484848485,
+      "coverage": 0.9040404040404041,
+      "cpu_ms": 4098.083800039603,
+      "frames_processed": 40
+    },
+    "afp_stability_only": {
+      "skip_ratio": 0.9204545454545454,
+      "coverage": 0.702020202020202,
+      "cpu_ms": 2282.0640000136336,
+      "frames_processed": 21
+    }
+  },
+  {
+    "clip": "clip2.mp4",
+    "total_frames": 93,
+    "gt_obstacle_frames": 82,
+    "gt_cpu_ms": 10079.507699949318,
+    "static_3": {
+      "skip_ratio": 0.6666666666666667,
+      "coverage": 1.0,
+      "cpu_ms": 3350.8798999828286,
+      "frames_processed": 31
+    },
+    "static_5": {
+      "skip_ratio": 0.7956989247311828,
+      "coverage": 1.0,
+      "cpu_ms": 1889.6870999888051,
+      "frames_processed": 19
+    },
+    "static_10": {
+      "skip_ratio": 0.8924731182795699,
+      "coverage": 1.0,
+      "cpu_ms": 1018.8540000381181,
+      "frames_processed": 10
+    },
+    "static_15": {
+      "skip_ratio": 0.9247311827956989,
+      "coverage": 0.7195121951219512,
+      "cpu_ms": 725.7042999990517,
+      "frames_processed": 7
+    },
+    "random_skip": {
+      "skip_ratio": 0.8064516129032258,
+      "coverage": 0.9512195121951219,
+      "cpu_ms": 1851.0119000566192,
+      "frames_processed": 18
+    },
+    "optical_flow_skip": {
+      "skip_ratio": 0.6774193548387097,
+      "coverage": 1.0,
+      "cpu_ms": 2859.722699999111,
+      "frames_processed": 30
+    },
+    "motion_skip": {
+      "skip_ratio": 0.6666666666666667,
+      "coverage": 1.0,
+      "cpu_ms": 3124.5504999824334,
+      "frames_processed": 31
+    },
+    "afp_full": {
+      "skip_ratio": 0.7741935483870968,
+      "coverage": 1.0,
+      "cpu_ms": 2136.506399998325,
+      "frames_processed": 21
+    },
+    "afp_proximity_only": {
+      "skip_ratio": 0.7634408602150538,
+      "coverage": 1.0,
+      "cpu_ms": 2256.5051000128733,
+      "frames_processed": 22
+    },
+    "afp_stability_only": {
+      "skip_ratio": 0.9247311827956989,
+      "coverage": 0.7439024390243902,
+      "cpu_ms": 747.4976999947103,
+      "frames_processed": 7
+    }
+  },
+  {
+    "clip": "clip20.mp4",
+    "total_frames": 308,
+    "gt_obstacle_frames": 220,
+    "gt_cpu_ms": 32572.46430015948,
+    "static_3": {
+      "skip_ratio": 0.6655844155844156,
+      "coverage": 0.9727272727272728,
+      "cpu_ms": 10716.629599963198,
+      "frames_processed": 103
+    },
+    "static_5": {
+      "skip_ratio": 0.7987012987012987,
+      "coverage": 0.9409090909090909,
+      "cpu_ms": 6471.295199953602,
+      "frames_processed": 62
+    },
+    "static_10": {
+      "skip_ratio": 0.8993506493506493,
+      "coverage": 0.8181818181818182,
+      "cpu_ms": 3137.4118000094313,
+      "frames_processed": 31
+    },
+    "static_15": {
+      "skip_ratio": 0.9318181818181819,
+      "coverage": 0.5545454545454546,
+      "cpu_ms": 2120.3452999907313,
+      "frames_processed": 21
+    },
+    "random_skip": {
+      "skip_ratio": 0.8376623376623377,
+      "coverage": 0.7545454545454545,
+      "cpu_ms": 5048.505599959753,
+      "frames_processed": 50
+    },
+    "optical_flow_skip": {
+      "skip_ratio": 0.6655844155844156,
+      "coverage": 0.9727272727272728,
+      "cpu_ms": 16073.551900073653,
+      "frames_processed": 103
+    },
+    "motion_skip": {
+      "skip_ratio": 0.6655844155844156,
+      "coverage": 0.9818181818181818,
+      "cpu_ms": 23272.693100050674,
+      "frames_processed": 103
+    },
+    "afp_full": {
+      "skip_ratio": 0.8863636363636364,
+      "coverage": 0.8045454545454546,
+      "cpu_ms": 7880.672799947206,
+      "frames_processed": 35
+    },
+    "afp_proximity_only": {
+      "skip_ratio": 0.8766233766233766,
+      "coverage": 0.8454545454545455,
+      "cpu_ms": 10846.330299958936,
+      "frames_processed": 38
+    },
+    "afp_stability_only": {
+      "skip_ratio": 0.9155844155844156,
+      "coverage": 0.6863636363636364,
+      "cpu_ms": 6172.044200022356,
+      "frames_processed": 26
+    }
+  },
+  {
+    "clip": "clip21.mp4",
+    "total_frames": 1275,
+    "gt_obstacle_frames": 312,
+    "gt_cpu_ms": 150895.52959993307,
+    "static_3": {
+      "skip_ratio": 0.6666666666666667,
+      "coverage": 0.8621794871794872,
+      "cpu_ms": 40170.247700065374,
+      "frames_processed": 425
+    },
+    "static_5": {
+      "skip_ratio": 0.8,
+      "coverage": 0.717948717948718,
+      "cpu_ms": 23446.007099933922,
+      "frames_processed": 255
+    },
+    "static_10": {
+      "skip_ratio": 0.899607843137255,
+      "coverage": 0.5544871794871795,
+      "cpu_ms": 13199.285000038799,
+      "frames_processed": 128
+    },
+    "static_15": {
+      "skip_ratio": 0.9333333333333333,
+      "coverage": 0.3685897435897436,
+      "cpu_ms": 7920.57339992607,
+      "frames_processed": 85
+    },
+    "random_skip": {
+      "skip_ratio": 0.8384313725490196,
+      "coverage": 0.5705128205128205,
+      "cpu_ms": 19394.03460001631,
+      "frames_processed": 206
+    },
+    "optical_flow_skip": {
+      "skip_ratio": 0.6745098039215687,
+      "coverage": 0.8525641025641025,
+      "cpu_ms": 39730.63360004744,
+      "frames_processed": 415
+    },
+    "motion_skip": {
+      "skip_ratio": 0.7701960784313726,
+      "coverage": 0.7724358974358975,
+      "cpu_ms": 26618.95810025453,
+      "frames_processed": 293
+    },
+    "afp_full": {
+      "skip_ratio": 0.8980392156862745,
+      "coverage": 0.5801282051282052,
+      "cpu_ms": 11397.714700025972,
+      "frames_processed": 130
+    },
+    "afp_proximity_only": {
+      "skip_ratio": 0.8854901960784314,
+      "coverage": 0.5961538461538461,
+      "cpu_ms": 12914.16590019071,
+      "frames_processed": 146
+    },
+    "afp_stability_only": {
+      "skip_ratio": 0.923921568627451,
+      "coverage": 0.4775641025641026,
+      "cpu_ms": 8359.79610006325,
+      "frames_processed": 97
+    }
+  },
+  {
+    "clip": "clip22.mp4",
+    "total_frames": 174,
+    "gt_obstacle_frames": 87,
+    "gt_cpu_ms": 15826.987900130916,
+    "static_3": {
+      "skip_ratio": 0.6666666666666667,
+      "coverage": 0.9310344827586207,
+      "cpu_ms": 5016.538299983949,
+      "frames_processed": 58
+    },
+    "static_5": {
+      "skip_ratio": 0.7988505747126436,
+      "coverage": 0.8735632183908046,
+      "cpu_ms": 3047.624899991206,
+      "frames_processed": 35
+    },
+    "static_10": {
+      "skip_ratio": 0.896551724137931,
+      "coverage": 0.735632183908046,
+      "cpu_ms": 1543.7288999964949,
+      "frames_processed": 18
+    },
+    "static_15": {
+      "skip_ratio": 0.9310344827586207,
+      "coverage": 0.5402298850574713,
+      "cpu_ms": 1149.4076999952085,
+      "frames_processed": 12
+    },
+    "random_skip": {
+      "skip_ratio": 0.8218390804597702,
+      "coverage": 0.6781609195402298,
+      "cpu_ms": 2781.7626999603817,
+      "frames_processed": 31
+    },
+    "optical_flow_skip": {
+      "skip_ratio": 0.6666666666666667,
+      "coverage": 0.9310344827586207,
+      "cpu_ms": 4959.425799999735,
+      "frames_processed": 58
+    },
+    "motion_skip": {
+      "skip_ratio": 0.6954022988505747,
+      "coverage": 0.9195402298850575,
+      "cpu_ms": 4505.051999978605,
+      "frames_processed": 53
+    },
+    "afp_full": {
+      "skip_ratio": 0.8850574712643678,
+      "coverage": 0.7126436781609196,
+      "cpu_ms": 1801.653599992278,
+      "frames_processed": 20
+    },
+    "afp_proximity_only": {
+      "skip_ratio": 0.8793103448275862,
+      "coverage": 0.735632183908046,
+      "cpu_ms": 2159.5885999849997,
+      "frames_processed": 21
+    },
+    "afp_stability_only": {
+      "skip_ratio": 0.9137931034482758,
+      "coverage": 0.5287356321839081,
+      "cpu_ms": 1465.8245000027819,
+      "frames_processed": 15
+    }
+  },
+  {
+    "clip": "clip23.mp4",
+    "total_frames": 174,
+    "gt_obstacle_frames": 97,
+    "gt_cpu_ms": 18002.199399954407,
+    "static_3": {
+      "skip_ratio": 0.6666666666666667,
+      "coverage": 0.8865979381443299,
+      "cpu_ms": 5560.793000055128,
+      "frames_processed": 58
+    },
+    "static_5": {
+      "skip_ratio": 0.7988505747126436,
+      "coverage": 0.7938144329896907,
+      "cpu_ms": 3204.9000000115484,
+      "frames_processed": 35
+    },
+    "static_10": {
+      "skip_ratio": 0.896551724137931,
+      "coverage": 0.5257731958762887,
+      "cpu_ms": 1594.3131000094581,
+      "frames_processed": 18
+    },
+    "static_15": {
+      "skip_ratio": 0.9310344827586207,
+      "coverage": 0.4742268041237113,
+      "cpu_ms": 1112.0989999908488,
+      "frames_processed": 12
+    },
+    "random_skip": {
+      "skip_ratio": 0.8218390804597702,
+      "coverage": 0.6597938144329897,
+      "cpu_ms": 2956.4651000255253,
+      "frames_processed": 31
+    },
+    "optical_flow_skip": {
+      "skip_ratio": 0.6666666666666667,
+      "coverage": 0.8865979381443299,
+      "cpu_ms": 5461.145600012969,
+      "frames_processed": 58
+    },
+    "motion_skip": {
+      "skip_ratio": 0.6666666666666667,
+      "coverage": 0.8865979381443299,
+      "cpu_ms": 5178.053199968417,
+      "frames_processed": 58
+    },
+    "afp_full": {
+      "skip_ratio": 0.8850574712643678,
+      "coverage": 0.5360824742268041,
+      "cpu_ms": 1800.8095000113826,
+      "frames_processed": 20
+    },
+    "afp_proximity_only": {
+      "skip_ratio": 0.8735632183908046,
+      "coverage": 0.6185567010309279,
+      "cpu_ms": 1907.3766999790678,
+      "frames_processed": 22
+    },
+    "afp_stability_only": {
+      "skip_ratio": 0.9195402298850575,
+      "coverage": 0.21649484536082475,
+      "cpu_ms": 1205.1387000101386,
+      "frames_processed": 14
+    }
+  },
+  {
+    "clip": "clip24.mp4",
+    "total_frames": 196,
+    "gt_obstacle_frames": 96,
+    "gt_cpu_ms": 18243.401599946083,
+    "static_3": {
+      "skip_ratio": 0.6632653061224489,
+      "coverage": 0.96875,
+      "cpu_ms": 6260.226700018393,
+      "frames_processed": 66
+    },
+    "static_5": {
+      "skip_ratio": 0.7959183673469388,
+      "coverage": 0.8020833333333334,
+      "cpu_ms": 3630.3089000139153,
+      "frames_processed": 40
+    },
+    "static_10": {
+      "skip_ratio": 0.8979591836734694,
+      "coverage": 0.625,
+      "cpu_ms": 1774.4463999697473,
+      "frames_processed": 20
+    },
+    "static_15": {
+      "skip_ratio": 0.9285714285714286,
+      "coverage": 0.5833333333333334,
+      "cpu_ms": 1452.4099999835016,
+      "frames_processed": 14
+    },
+    "random_skip": {
+      "skip_ratio": 0.826530612244898,
+      "coverage": 0.71875,
+      "cpu_ms": 3267.515999948955,
+      "frames_processed": 34
+    },
+    "optical_flow_skip": {
+      "skip_ratio": 0.6632653061224489,
+      "coverage": 0.96875,
+      "cpu_ms": 5975.19969996938,
+      "frames_processed": 66
+    },
+    "motion_skip": {
+      "skip_ratio": 0.7040816326530612,
+      "coverage": 0.9791666666666666,
+      "cpu_ms": 5073.334600048838,
+      "frames_processed": 58
+    },
+    "afp_full": {
+      "skip_ratio": 0.903061224489796,
+      "coverage": 0.6875,
+      "cpu_ms": 1724.9794000090333,
+      "frames_processed": 19
+    },
+    "afp_proximity_only": {
+      "skip_ratio": 0.8775510204081632,
+      "coverage": 0.7604166666666666,
+      "cpu_ms": 2130.169600030058,
+      "frames_processed": 24
+    },
+    "afp_stability_only": {
+      "skip_ratio": 0.9183673469387755,
+      "coverage": 0.59375,
+      "cpu_ms": 1407.9552000184776,
+      "frames_processed": 16
+    }
+  },
+  {
+    "clip": "clip3.mp4",
+    "total_frames": 100,
+    "gt_obstacle_frames": 73,
+    "gt_cpu_ms": 9416.46170002059,
+    "static_3": {
+      "skip_ratio": 0.6599999999999999,
+      "coverage": 0.9863013698630136,
+      "cpu_ms": 3215.241900004912,
+      "frames_processed": 34
+    },
+    "static_5": {
+      "skip_ratio": 0.8,
+      "coverage": 0.9452054794520548,
+      "cpu_ms": 1782.432100022561,
+      "frames_processed": 20
+    },
+    "static_10": {
+      "skip_ratio": 0.9,
+      "coverage": 0.8904109589041096,
+      "cpu_ms": 898.3911999966949,
+      "frames_processed": 10
+    },
+    "static_15": {
+      "skip_ratio": 0.9299999999999999,
+      "coverage": 0.7534246575342466,
+      "cpu_ms": 618.030000012368,
+      "frames_processed": 7
+    },
+    "random_skip": {
+      "skip_ratio": 0.81,
+      "coverage": 0.8493150684931506,
+      "cpu_ms": 1637.2902999719372,
+      "frames_processed": 19
+    },
+    "optical_flow_skip": {
+      "skip_ratio": 0.6599999999999999,
+      "coverage": 0.9863013698630136,
+      "cpu_ms": 3015.044600062538,
+      "frames_processed": 34
+    },
+    "motion_skip": {
+      "skip_ratio": 0.74,
+      "coverage": 0.958904109589041,
+      "cpu_ms": 2183.976700005587,
+      "frames_processed": 26
+    },
+    "afp_full": {
+      "skip_ratio": 0.85,
+      "coverage": 0.8904109589041096,
+      "cpu_ms": 1294.752099987818,
+      "frames_processed": 15
+    },
+    "afp_proximity_only": {
+      "skip_ratio": 0.83,
+      "coverage": 0.8356164383561644,
+      "cpu_ms": 1449.119500030065,
+      "frames_processed": 17
+    },
+    "afp_stability_only": {
+      "skip_ratio": 0.91,
+      "coverage": 0.6712328767123288,
+      "cpu_ms": 921.2924999737879,
+      "frames_processed": 9
+    }
+  },
+  {
+    "clip": "clip4.mp4",
+    "total_frames": 117,
+    "gt_obstacle_frames": 103,
+    "gt_cpu_ms": 10751.702299967292,
+    "static_3": {
+      "skip_ratio": 0.6666666666666667,
+      "coverage": 0.9611650485436893,
+      "cpu_ms": 3473.656200018013,
+      "frames_processed": 39
+    },
+    "static_5": {
+      "skip_ratio": 0.7948717948717949,
+      "coverage": 0.9029126213592233,
+      "cpu_ms": 2097.056699974928,
+      "frames_processed": 24
+    },
+    "static_10": {
+      "skip_ratio": 0.8974358974358975,
+      "coverage": 0.7766990291262136,
+      "cpu_ms": 1233.6844999954337,
+      "frames_processed": 12
+    },
+    "static_15": {
+      "skip_ratio": 0.9316239316239316,
+      "coverage": 0.5825242718446602,
+      "cpu_ms": 777.2490999777801,
+      "frames_processed": 8
+    },
+    "random_skip": {
+      "skip_ratio": 0.811965811965812,
+      "coverage": 0.8737864077669902,
+      "cpu_ms": 2176.194900064729,
+      "frames_processed": 22
+    },
+    "optical_flow_skip": {
+      "skip_ratio": 0.6666666666666667,
+      "coverage": 0.9611650485436893,
+      "cpu_ms": 4174.302999963402,
+      "frames_processed": 39
+    },
+    "motion_skip": {
+      "skip_ratio": 0.6666666666666667,
+      "coverage": 0.9611650485436893,
+      "cpu_ms": 3477.6171000266913,
+      "frames_processed": 39
+    },
+    "afp_full": {
+      "skip_ratio": 0.8803418803418803,
+      "coverage": 0.7281553398058253,
+      "cpu_ms": 1179.5408000325551,
+      "frames_processed": 14
+    },
+    "afp_proximity_only": {
+      "skip_ratio": 0.8632478632478633,
+      "coverage": 0.8543689320388349,
+      "cpu_ms": 1423.8412999984575,
+      "frames_processed": 16
+    },
+    "afp_stability_only": {
+      "skip_ratio": 0.9145299145299145,
+      "coverage": 0.6116504854368932,
+      "cpu_ms": 915.8173999894643,
+      "frames_processed": 10
+    }
+  },
+  {
+    "clip": "clip5.mp4",
+    "total_frames": 103,
+    "gt_obstacle_frames": 98,
+    "gt_cpu_ms": 8966.121300065424,
+    "static_3": {
+      "skip_ratio": 0.6601941747572815,
+      "coverage": 0.9897959183673469,
+      "cpu_ms": 2977.7360999869416,
+      "frames_processed": 35
+    },
+    "static_5": {
+      "skip_ratio": 0.7961165048543689,
+      "coverage": 0.9693877551020408,
+      "cpu_ms": 1782.1616999717662,
+      "frames_processed": 21
+    },
+    "static_10": {
+      "skip_ratio": 0.8932038834951457,
+      "coverage": 0.8979591836734694,
+      "cpu_ms": 963.1057999940822,
+      "frames_processed": 11
+    },
+    "static_15": {
+      "skip_ratio": 0.9320388349514563,
+      "coverage": 0.5918367346938775,
+      "cpu_ms": 607.3965999967186,
+      "frames_processed": 7
+    },
+    "random_skip": {
+      "skip_ratio": 0.7961165048543689,
+      "coverage": 0.9489795918367347,
+      "cpu_ms": 1878.7439000006998,
+      "frames_processed": 21
+    },
+    "optical_flow_skip": {
+      "skip_ratio": 0.6601941747572815,
+      "coverage": 0.9897959183673469,
+      "cpu_ms": 2968.800399976317,
+      "frames_processed": 35
+    },
+    "motion_skip": {
+      "skip_ratio": 0.6699029126213591,
+      "coverage": 0.9897959183673469,
+      "cpu_ms": 2997.464200001559,
+      "frames_processed": 34
+    },
+    "afp_full": {
+      "skip_ratio": 0.9029126213592233,
+      "coverage": 0.7755102040816326,
+      "cpu_ms": 865.0591999903554,
+      "frames_processed": 10
+    },
+    "afp_proximity_only": {
+      "skip_ratio": 0.8737864077669903,
+      "coverage": 0.8877551020408163,
+      "cpu_ms": 1108.2689000031678,
+      "frames_processed": 13
+    },
+    "afp_stability_only": {
+      "skip_ratio": 0.9223300970873787,
+      "coverage": 0.7346938775510204,
+      "cpu_ms": 675.9093000000576,
+      "frames_processed": 8
+    }
+  },
+  {
+    "clip": "clip6.mp4",
+    "total_frames": 102,
+    "gt_obstacle_frames": 73,
+    "gt_cpu_ms": 9906.754599971464,
+    "static_3": {
+      "skip_ratio": 0.6666666666666667,
+      "coverage": 0.9726027397260274,
+      "cpu_ms": 3623.0174999509472,
+      "frames_processed": 34
+    },
+    "static_5": {
+      "skip_ratio": 0.7941176470588236,
+      "coverage": 0.958904109589041,
+      "cpu_ms": 1827.2235999902477,
+      "frames_processed": 21
+    },
+    "static_10": {
+      "skip_ratio": 0.892156862745098,
+      "coverage": 0.8904109589041096,
+      "cpu_ms": 1012.8270999994129,
+      "frames_processed": 11
+    },
+    "static_15": {
+      "skip_ratio": 0.9313725490196079,
+      "coverage": 0.547945205479452,
+      "cpu_ms": 592.7161000145134,
+      "frames_processed": 7
+    },
+    "random_skip": {
+      "skip_ratio": 0.7941176470588236,
+      "coverage": 0.9178082191780822,
+      "cpu_ms": 1812.5320999970427,
+      "frames_processed": 21
+    },
+    "optical_flow_skip": {
+      "skip_ratio": 0.6764705882352942,
+      "coverage": 0.9726027397260274,
+      "cpu_ms": 2789.1995998943457,
+      "frames_processed": 33
+    },
+    "motion_skip": {
+      "skip_ratio": 0.7254901960784313,
+      "coverage": 0.8767123287671232,
+      "cpu_ms": 2379.2987000051653,
+      "frames_processed": 28
+    },
+    "afp_full": {
+      "skip_ratio": 0.8627450980392157,
+      "coverage": 0.8904109589041096,
+      "cpu_ms": 1160.5249999847729,
+      "frames_processed": 14
+    },
+    "afp_proximity_only": {
+      "skip_ratio": 0.8529411764705882,
+      "coverage": 0.863013698630137,
+      "cpu_ms": 1260.410300004878,
+      "frames_processed": 15
+    },
+    "afp_stability_only": {
+      "skip_ratio": 0.9215686274509804,
+      "coverage": 0.5616438356164384,
+      "cpu_ms": 729.2361999861896,
+      "frames_processed": 8
+    }
+  },
+  {
+    "clip": "clip7.mp4",
+    "total_frames": 109,
+    "gt_obstacle_frames": 105,
+    "gt_cpu_ms": 9388.318800003617,
+    "static_3": {
+      "skip_ratio": 0.6605504587155964,
+      "coverage": 0.9904761904761905,
+      "cpu_ms": 3167.087900044862,
+      "frames_processed": 37
+    },
+    "static_5": {
+      "skip_ratio": 0.7981651376146789,
+      "coverage": 0.9523809523809523,
+      "cpu_ms": 1812.1971000655321,
+      "frames_processed": 22
+    },
+    "static_10": {
+      "skip_ratio": 0.8990825688073394,
+      "coverage": 0.8761904761904762,
+      "cpu_ms": 931.3785999693209,
+      "frames_processed": 11
+    },
+    "static_15": {
+      "skip_ratio": 0.926605504587156,
+      "coverage": 0.638095238095238,
+      "cpu_ms": 689.2472000035923,
+      "frames_processed": 8
+    },
+    "random_skip": {
+      "skip_ratio": 0.8073394495412844,
+      "coverage": 0.8952380952380953,
+      "cpu_ms": 1786.494899977697,
+      "frames_processed": 21
+    },
+    "optical_flow_skip": {
+      "skip_ratio": 0.6605504587155964,
+      "coverage": 0.9904761904761905,
+      "cpu_ms": 3053.8425000122515,
+      "frames_processed": 37
+    },
+    "motion_skip": {
+      "skip_ratio": 0.6697247706422018,
+      "coverage": 0.9714285714285714,
+      "cpu_ms": 3018.1242999096867,
+      "frames_processed": 36
+    },
+    "afp_full": {
+      "skip_ratio": 0.8899082568807339,
+      "coverage": 0.8857142857142857,
+      "cpu_ms": 1017.9739000013797,
+      "frames_processed": 12
+    },
+    "afp_proximity_only": {
+      "skip_ratio": 0.8715596330275229,
+      "coverage": 0.8761904761904762,
+      "cpu_ms": 1218.1538000149885,
+      "frames_processed": 14
+    },
+    "afp_stability_only": {
+      "skip_ratio": 0.9174311926605505,
+      "coverage": 0.7428571428571429,
+      "cpu_ms": 709.8859999969136,
+      "frames_processed": 9
+    }
+  },
+  {
+    "clip": "clip8.mp4",
+    "total_frames": 313,
+    "gt_obstacle_frames": 235,
+    "gt_cpu_ms": 27690.981700085104,
+    "static_3": {
+      "skip_ratio": 0.6645367412140575,
+      "coverage": 0.9872340425531915,
+      "cpu_ms": 10192.953899953864,
+      "frames_processed": 105
+    },
+    "static_5": {
+      "skip_ratio": 0.7987220447284344,
+      "coverage": 0.948936170212766,
+      "cpu_ms": 5678.68729995098,
+      "frames_processed": 63
+    },
+    "static_10": {
+      "skip_ratio": 0.8977635782747604,
+      "coverage": 0.8638297872340426,
+      "cpu_ms": 2990.345099984552,
+      "frames_processed": 32
+    },
+    "static_15": {
+      "skip_ratio": 0.9329073482428115,
+      "coverage": 0.6085106382978723,
+      "cpu_ms": 1859.6602000034181,
+      "frames_processed": 21
+    },
+    "random_skip": {
+      "skip_ratio": 0.8370607028753994,
+      "coverage": 0.825531914893617,
+      "cpu_ms": 4467.975500039756,
+      "frames_processed": 51
+    },
+    "optical_flow_skip": {
+      "skip_ratio": 0.6741214057507987,
+      "coverage": 0.9872340425531915,
+      "cpu_ms": 8434.78069989942,
+      "frames_processed": 102
+    },
+    "motion_skip": {
+      "skip_ratio": 0.6869009584664536,
+      "coverage": 0.9872340425531915,
+      "cpu_ms": 8180.775199944037,
+      "frames_processed": 98
+    },
+    "afp_full": {
+      "skip_ratio": 0.8690095846645367,
+      "coverage": 0.902127659574468,
+      "cpu_ms": 3582.0384999387898,
+      "frames_processed": 41
+    },
+    "afp_proximity_only": {
+      "skip_ratio": 0.865814696485623,
+      "coverage": 0.902127659574468,
+      "cpu_ms": 3689.6946000051685,
+      "frames_processed": 42
+    },
+    "afp_stability_only": {
+      "skip_ratio": 0.9169329073482428,
+      "coverage": 0.676595744680851,
+      "cpu_ms": 2159.0025999903446,
+      "frames_processed": 26
+    }
+  },
+  {
+    "clip": "clip9.mp4",
+    "total_frames": 272,
+    "gt_obstacle_frames": 183,
+    "gt_cpu_ms": 26349.084799876437,
+    "static_3": {
+      "skip_ratio": 0.6654411764705883,
+      "coverage": 0.9781420765027322,
+      "cpu_ms": 10192.585800105007,
+      "frames_processed": 91
+    },
+    "static_5": {
+      "skip_ratio": 0.7977941176470589,
+      "coverage": 0.912568306010929,
+      "cpu_ms": 6343.264999959501,
+      "frames_processed": 55
+    },
+    "static_10": {
+      "skip_ratio": 0.8970588235294118,
+      "coverage": 0.73224043715847,
+      "cpu_ms": 3378.39349998103,
+      "frames_processed": 28
+    },
+    "static_15": {
+      "skip_ratio": 0.9301470588235294,
+      "coverage": 0.6010928961748634,
+      "cpu_ms": 2041.4268000167795,
+      "frames_processed": 19
+    },
+    "random_skip": {
+      "skip_ratio": 0.8419117647058824,
+      "coverage": 0.7814207650273224,
+      "cpu_ms": 4775.158800024656,
+      "frames_processed": 43
+    },
+    "optical_flow_skip": {
+      "skip_ratio": 0.6654411764705883,
+      "coverage": 0.9781420765027322,
+      "cpu_ms": 9834.9488999811,
+      "frames_processed": 91
+    },
+    "motion_skip": {
+      "skip_ratio": 0.6911764705882353,
+      "coverage": 0.9726775956284153,
+      "cpu_ms": 8958.80610003951,
+      "frames_processed": 84
+    },
+    "afp_full": {
+      "skip_ratio": 0.8823529411764706,
+      "coverage": 0.8032786885245902,
+      "cpu_ms": 2983.3507999865105,
+      "frames_processed": 32
+    },
+    "afp_proximity_only": {
+      "skip_ratio": 0.8639705882352942,
+      "coverage": 0.8360655737704918,
+      "cpu_ms": 4039.6278999833157,
+      "frames_processed": 37
+    },
+    "afp_stability_only": {
+      "skip_ratio": 0.9264705882352942,
+      "coverage": 0.6174863387978142,
+      "cpu_ms": 2160.6918000325095,
+      "frames_processed": 20
+    }
+  }
+]

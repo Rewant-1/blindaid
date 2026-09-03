@@ -1,9 +1,12 @@
 """Verify all paper numbers against ground truth evaluation data."""
 import json
+from pathlib import Path
 import statistics
 
+DATA_DIR = Path(__file__).resolve().parent
+
 # === 1. Real-World Video Evaluation (Table 6) ===
-with open("results_video_evaluation.json", "r") as f:
+with open(DATA_DIR / "results_video_evaluation.json", "r") as f:
     video_data = json.load(f)
 
 print("=" * 70)
@@ -64,7 +67,7 @@ print("\n" + "=" * 70)
 print("ABLATION STUDY (Table 7 ground truth)")
 print("=" * 70)
 
-with open("results_ablation.json", "r") as f:
+with open(DATA_DIR / "results_ablation.json", "r") as f:
     ablation_data = json.load(f)
 
 strategies = ["static_3", "static_5", "static_10", "static_15", 
@@ -102,7 +105,7 @@ print("\n" + "=" * 70)
 print("PHASE 7 BENCHMARKS (ground truth)")
 print("=" * 70)
 
-with open("results_phase7_benchmarks.json", "r") as f:
+with open(DATA_DIR / "results_phase7_benchmarks.json", "r") as f:
     bench = json.load(f)
 
 print("\nAFP Comparison (100 synthetic frames):")

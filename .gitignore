@@ -54,9 +54,14 @@ venv.bak/
 # Data
 *.csv
 *.json
+!evaluation/results_*.json
 *.xml
 *.yaml
 !data.yaml
+
+# Agent runs
+.agents/
+._agents/
 
 # Logs
 *.log

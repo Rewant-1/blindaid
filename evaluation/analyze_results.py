@@ -1,6 +1,10 @@
-import json, statistics
+import json
+from pathlib import Path
+import statistics
 
-with open("evaluation/results_video_evaluation.json") as f:
+DATA_FILE = Path(__file__).resolve().parent / "results_video_evaluation.json"
+
+with open(DATA_FILE) as f:
     data = json.load(f)
 
 print("=" * 80)
