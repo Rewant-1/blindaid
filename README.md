@@ -182,7 +182,7 @@ If you find this work or codebase useful in your research, please cite:
 ```bibtex
 @inproceedings{afp2026indiscon,
   title     = {Adaptive Frame Processing: Latency-Bounded Temporal Scheduling for Multi-Modal Edge Inference},
-  author    = {Anonymous Authors},
+  author    = {Bhriguvanshi, Rewant and Sinha, Shubhika and Singh, Satyam},
   booktitle = {Proceedings of the 7th IEEE India Council International Subsections Conference (INDISCON)},
   year      = {2026},
   organization = {IEEE}

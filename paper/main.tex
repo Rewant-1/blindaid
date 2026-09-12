@@ -21,16 +21,6 @@
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
 
-% =============================================================================
-% SPACE-SAVING ADJUSTMENTS (Strictly IEEEtran template compliant)
-% =============================================================================
-\setlength{\textfloatsep}{8pt plus 2.0pt minus 2.0pt}
-\setlength{\floatsep}{8pt plus 2.0pt minus 2.0pt}
-\setlength{\intextsep}{8pt plus 2.0pt minus 2.0pt}
-\setlength{\dbltextfloatsep}{8pt plus 2.0pt minus 2.0pt}
-\setlength{\dblfloatsep}{8pt plus 2.0pt minus 2.0pt}
-\def\IEEEbibitemsep{0pt plus 1.0pt}
-
 \begin{document}
 
 % =============================================================================
@@ -40,13 +30,35 @@
 Temporal Scheduling for Multi-Modal Edge Inference}
 
 \author{
-  \IEEEauthorblockN{Anonymous Authors}
-  \IEEEauthorblockA{
-    \textit{Anonymous Affiliation} \\
-    Anonymous City, Anonymous Country \\
-    anonymous@example.com
-  }
+\IEEEauthorblockN{Rewant Bhriguvanshi}
+\IEEEauthorblockA{
+\textit{Department of ECE}\\
+\textit{Faculty of Technology}\\
+\textit{University of Delhi}\\
+Delhi, India\\
+rewant.bhriguvanshi1@gmail.com
 }
+\and
+\IEEEauthorblockN{Shubhika Sinha}
+\IEEEauthorblockA{
+\textit{Department of CSE}\\
+\textit{Faculty of Technology}\\
+\textit{University of Delhi}\\
+Delhi, India\\
+dr.asinha@ce.du.ac.in
+}
+\and
+\IEEEauthorblockN{Satyam Singh}
+\IEEEauthorblockA{
+\textit{Department of ECE}\\
+\textit{Faculty of Technology}\\
+\textit{University of Delhi}\\
+Delhi, India\\
+satyamsingh18177@ece.du.ac.in
+}
+}
+
+
 
 \maketitle
 
@@ -86,7 +98,7 @@ depth estimation, object detection, video processing
 \label{sec:introduction}
 
 Deploying multi-modal video perception on edge
-devices---autonomous robots, IoT monitoring platforms, mobile
+devices---i.e., autonomous robots, IoT monitoring platforms, mobile
 systems---requires running multiple deep neural networks per frame.
 A representative pipeline combining monocular depth
 estimation~\cite{ranftl2020midas} with object
@@ -316,7 +328,7 @@ depth information, but computing depth \emph{is} the processing in
 question. AFP resolves this by using the \emph{previous} frame's
 depth map $D_{t-1}$ and histogram $H_{t-1}$ to decide whether to
 process frame~$F_t$. This introduces a one-frame adaptation delay.
-At 30\,fps (33\,ms per frame), scene conditions change slowly
+At 10\,fps (100\,ms per frame), scene conditions change slowly
 relative to the frame rate, making this delay negligible in
 practice.
 
@@ -424,7 +436,7 @@ $s_t = s_\text{min}$, bounding the worst-case response latency to:
   \label{eq:afp_latency}
 \end{equation}
 For $s_\text{min}{=}2$ and $f{=}10$\,fps,
-$L_\text{AFP}^\text{worst} = 200$\,ms---a $4.5\times$ improvement
+$L_\text{AFP}^\text{worst} = 200$\,ms--a $4.5\times$ improvement
 over static~1/10 and a finite bound where motion-triggered
 scheduling has none. Table~\ref{tab:latency_bounds} summarizes
 these characteristics. At a typical walking speed of 1.2\,m/s, the
@@ -444,7 +456,7 @@ travel before the system reacts, while AFP limits this to 0.24\,m.
     Always-On        & 0\,ms     & 0     & 0     \\
     AFP Full         & 200\,ms   & 87.6  & 0.24  \\
     Static 1/10      & 900\,ms   & 89.7  & 1.08  \\
-    Motion-Triggered & $\infty$  & 69.8  & $\infty$ \\
+    Motion-Triggered & $\infty$  & 69.6  & $\infty$ \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -484,8 +496,8 @@ The amortized per-frame cost across all frames is:
 \end{equation}
 where $r$ is the measured skip ratio, $t_\text{proc} = 87.4$\,ms,
 and $t_\text{skip} \approx 0$\,ms. At the observed
-$r = 0.876$, this gives $\bar{t} \approx 10.8$\,ms---well within
-real-time requirements at 30\,fps (33\,ms budget).
+$r = 0.876$, this gives $\bar{t} \approx 10.8$\,ms which is well within
+real-time requirements at 10\,fps (100\,ms budget).
 
 % =============================================================================
 % V. EXPERIMENTAL EVALUATION
@@ -533,16 +545,16 @@ average coverage, skip ratio, and CEI.
       & \textbf{CEI} \\
     \midrule
     Static 1/3        & 96.4 & 66.5 & 2.88 \\
-    Static 1/5        & 91.3 & 79.8 & 4.52 \\
+    Static 1/5        & 90.5 & 79.8 & 4.48 \\
     Static 1/10       & 78.0 & 89.7 & 7.60 \\
-    Static 1/15       & 56.4 & 93.1 & 8.18 \\
+    Static 1/15       & 56.4 & 93.1 & 8.16 \\
     \midrule
     Random Skip       & 78.1 & 82.6 & 4.50 \\
     Optical Flow      & 96.3 & 66.8 & 2.90 \\
-    Motion-Triggered  & 94.0 & 69.8 & 3.11 \\
+    Motion-Triggered  & 93.9 & 69.6 & 3.09 \\
     \midrule
-    AFP Stab-only     & 61.5 & 91.9 & 7.61 \\
-    AFP Prox-only     & 81.4 & 86.2 & 5.88 \\
+    AFP Stab-only     & 61.5 & 92.0 & 7.67 \\
+    AFP Prox-only     & 81.4 & 86.2 & 5.92 \\
     \textbf{AFP Full} & \textbf{77.9} & \textbf{87.6} & \textbf{6.30} \\
     \bottomrule
   \end{tabular}
@@ -550,12 +562,12 @@ average coverage, skip ratio, and CEI.
 
 \textbf{AFP vs.\ motion baselines.} Optical Flow and
 Motion-Triggered scheduling achieve high coverage (96.3\% and
-94.0\%) but process too many frames (skip ratios of only 66.8\% and
-69.8\%), yielding low CEI values of 2.90 and 3.11. Walking motion
+93.9\%) but process too many frames (skip ratios of only 66.8\% and
+69.6\%), yielding low CEI values of 2.90 and 3.09. Walking motion
 creates continuous ego-motion that constantly exceeds
 motion-detection thresholds, preventing these methods from skipping
 effectively. AFP Full achieves a CEI of 6.30---over $2\times$ more
-efficient---by using depth to distinguish relevant proximity changes
+efficient by using depth to distinguish relevant proximity changes
 from background ego-motion. Critically, motion-triggered scheduling
 has no worst-case latency bound (Section~\ref{sec:latency}), while
 AFP guarantees 200\,ms.
@@ -592,9 +604,9 @@ Table~\ref{tab:realworld} presents per-clip results for eight
 representative sequences selected to illustrate diverse scenarios.
 AFP matches or exceeds Static 1/10 coverage in 5 of 8 clips (1, 3,
 17, 22, 24) while maintaining higher skip ratios than motion-based
-baselines. Clip~12 (high-density, average proximity~$= 0.82$)
+baselines. Clip~12 (high-density, average proximity~$= 0.78$)
 demonstrates the proximity-driven adaptation: AFP reduces its skip
-ratio to 77.4\%---the lowest across all 24 clips---automatically
+ratio to 77.4\%--the lowest across all 24 clips; automatically
 allocating more compute when obstacles are consistently close.
 Conversely, Clip~10 (sparse environment with brief obstacle
 appearances) shows AFP's weakness: the one-frame feedback delay
@@ -698,33 +710,51 @@ highly accurate geometric proxy for $D_t$, making the 1-frame
 adaptation delay negligible in practice without requiring access
 to current-frame depth information prior to inference.
 
-\textbf{Limitations.} AFP uses manually tuned parameters rather
-than a learned policy. However, the primary contribution is not
-the specific threshold values ($\tau_p$, $s_\text{min}$,
-$s_\text{max}$) but the \emph{scheduling formulation} itself:
-the depth-feedback architecture that resolves the circular
-dependency, the formal latency bounds that follow from it, and
-the demonstration that a simple heuristic instantiation of this
-formulation already matches static baselines. A learned policy
-could be substituted within the same framework to discover
-better strategies, particularly in complex environments.
-The system relies on monocular relative depth (MiDaS), providing
-approximate rather than metric distance estimates.
-Because MiDaS outputs relative depth normalized to $[0,1]$,
-the proximity threshold $\tau_p = 0.7$ does not correspond to a
-fixed physical distance and may require recalibration across scene
-types. Indoor corridors with uniform depth gradients produce
-different normalizations than open outdoor environments. However,
-the parameter sensitivity analysis (Table~\ref{tab:sensitivity})
-shows that AFP degrades gracefully across a wide $\tau_p$ range
-(0.5--0.9), providing a practical tuning envelope for deployment.
-While AFP Full
-achieves 77.9\% average coverage, approximately 22\% of detections
-are missed---concentrated during stable or far-field periods.
-Under close proximity, AFP increases sampling frequency to minimize
-gaps. The evaluation uses a single hardware platform; benchmarking
-across embedded targets (Raspberry~Pi, Jetson) would
-strengthen generalizability.
+\textbf{Limitations.} AFP uses manually-tuned parameters rather than a
+learned policy, but the main novelty is not the exact threshold
+values ($\tau_p$, $s_\text{min}$, $s_\text{max}$), but the scheduling
+formulation itself---the depth feedback architecture which breaks
+the circular dependency, the formal latency bounds which follow from
+it, and that a simple heuristic instantiation of this formulation
+already meets static baselines. A learned policy could be substituted
+within the same formulation to discover better strategies in more
+complex environments. The system only relies on monocular relative
+depth (MiDaS) which gives approximate rather than metric distance
+estimates; because MiDaS outputs relative depth normalized to $[0,1]$,
+proximity threshold $\tau_p = 0.7$ does not correspond to a fixed
+physical distance and may need recalibration across scene types.
+Indoor corridors with uniform depth gradients have different
+normalizations than open outdoor environments. However, the parameter
+sensitivity analysis (Table~\ref{tab:sensitivity}) suggests AFP
+degrades gracefully across a wide $\tau_p$ range (0.5--0.9), giving a
+practical tuning envelope for deployment. A practical mitigation is a
+brief per-deployment calibration pass: on start-up, run AFP in
+Always-On mode for $W$ warmup frames (e.g.\ $W{=}100$, $\sim$10\,s at
+10\,fps), collect the resulting distribution of center-region depth
+values $d_t$, and set $\tau_p$ to a fixed percentile (e.g.\ the 85th)
+of that distribution rather than a hardcoded constant. This will
+adapt the threshold to each scene's depth normalization
+automatically---an indoor corridor and an open plaza would each
+converge to a different absolute $\tau_p$ but the same relative
+proximity criterion---at the cost of a one-time warmup delay before
+AFP's latency bound becomes active. While AFP Full reaches 77.9\%
+average coverage, approximately 22\% of detections are missed,
+concentrated during stable or far-field periods. Under close
+proximity, AFP ramps up sampling frequency to reduce gaps. The
+evaluation was run on a single hardware platform; to strengthen
+generalizability, benchmarking across embedded targets is a worthy
+pursuit. While direct hardware validation is left to future work,
+published ONNX/INT8 benchmarks for comparably-sized detectors give a
+rough envelope: YOLOv8n-class models report per-frame latencies of
+roughly 20--80\,ms on Raspberry Pi 5 and Jetson Orin-class hardware~\cite{pi5adas2026,jetsonyolo2025}, versus 30.0\,ms on our x86 test platform. Adding a
+similarly-scaled MiDaS-Small pass, we would expect combined per-frame
+latency in the 100--250\,ms range on such devices---well within AFP's
+tolerance, since the framework bounds worst-case latency independent
+of raw per-frame cost by simply reducing $s_\text{min}$ to compensate
+for a slower platform. The relative gains over static subsampling
+would persist, though the absolute latency bound
+(Eq.~\ref{eq:afp_latency}) would shift proportionally with the
+platform's frame rate $f$.
 
 \textbf{Future work.} Replacing the heuristic scheduler with a
 lightweight learned policy (e.g., a small MLP trained via RL)
@@ -743,11 +773,12 @@ and bounding worst-case proximity latency at 200\,ms---a
 $4.5\times$ reduction from the 900\,ms incurred by static~1/10.
 The framework adds 2.6\,ms of scheduling overhead, requires no
 training, and is orthogonal to per-frame model optimizations.
-
+\newpage
 % =============================================================================
 % REFERENCES
 % =============================================================================
-\balance
+
+\IEEEtriggeratref{14}
 \bibliographystyle{IEEEtran}
 \bibliography{references}
 
