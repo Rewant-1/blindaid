@@ -1,0 +1,12 @@
+PHASE 2 DETECTION BENCHMARK RESULTS
+Date: 2026-05-24 17:52:11
+Frames: 50
+
+YOLOv8n ONNX:
+  Median: 33.2 ms
+  Mean:   33.4 ms (±1.9)
+  P95:    36.0 ms
+  P99:    39.2 ms
+  Memory: 92 MB
+  Avg detections/frame: 0.0
+

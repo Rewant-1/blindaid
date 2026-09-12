@@ -17,9 +17,9 @@ except ModuleNotFoundError as exc:
 
 from blindaid.core import config
 from blindaid.core.audio import AudioPlayer
-from blindaid.core.caption import VisualAssistant
-from blindaid.core.depth import DepthAnalyzer
+from blindaid.core.depth_onnx import DepthAnalyzerONNX
 from blindaid.core.speech_recognition import SpeechListener
+from blindaid.core.template_caption import TemplateCaption
 from blindaid.modes.guardian.guardian_mode import GuardianMode
 from blindaid.modes.ocr.reading_mode import ReadingMode
 from blindaid.modes.people.people_mode import PeopleMode
@@ -84,9 +84,9 @@ class ModeController:
         self.current_mode_key = requested_mode
         self.previous_mode_key = requested_mode
 
-        self.visual_assistant: Optional[VisualAssistant] = None
+        self.template_caption: Optional[TemplateCaption] = None
         self.speech_listener: Optional[SpeechListener] = None
-        self.depth_analyzer: Optional[DepthAnalyzer] = None
+        self.depth_analyzer: Optional[DepthAnalyzerONNX] = None
 
         self.overlays: list[OverlayMessage] = []
         self.fps_counter = 0
@@ -122,15 +122,14 @@ class ModeController:
                     except Exception as e:
                         logger.debug("Preload failed for %s: %s", mode_key, e)
                 
-                # Preload visual assistant for caption/VQA
+                # Preload template captioning (lightweight, ONNX-based)
                 if self._preload_running:
                     try:
-                        logger.info("Preloading visual assistant...")
-                        if self.visual_assistant is None:
-                            self.visual_assistant = VisualAssistant(device=getattr(config, "CAPTION_DEVICE", "cpu"))
-                        self.visual_assistant._ensure_caption_model()
+                        logger.info("Preloading template captioner...")
+                        if self.template_caption is None:
+                            self.template_caption = TemplateCaption()
                     except Exception as e:
-                        logger.debug("Preload failed for visual assistant: %s", e)
+                        logger.debug("Preload failed for template captioner: %s", e)
                 
                 logger.info("Background preload complete")
             except Exception as e:
@@ -212,10 +211,10 @@ class ModeController:
             self.fps_counter = 0
             self.fps_last_time = now
 
-    def _ensure_visual_assistant(self) -> VisualAssistant:
-        if self.visual_assistant is None:
-            self.visual_assistant = VisualAssistant()
-        return self.visual_assistant
+    def _ensure_template_caption(self) -> TemplateCaption:
+        if self.template_caption is None:
+            self.template_caption = TemplateCaption()
+        return self.template_caption
 
     def _ensure_speech_listener(self) -> SpeechListener:
         if self.speech_listener is None:
@@ -227,8 +226,8 @@ class ModeController:
             self._add_overlay("Analyzing scene...", duration=2.0)
             cv2.waitKey(1)
             
-            assistant = self._ensure_visual_assistant()
-            caption = assistant.generate_caption(frame)
+            captioner = self._ensure_template_caption()
+            caption = captioner.generate_caption(frame)
             if caption:
                 self._add_overlay(f"Caption: {caption}", duration=6.0)
                 self._speak_messages([caption])
@@ -341,6 +340,10 @@ class ModeController:
         if not capture.isOpened():
             logger.error("Unable to open camera index %s", self.camera_index)
             return
+
+        # Set buffer size to 1 to prevent OpenCV from queuing old frames.
+        # This eliminates the "laggy" delay where the video feed lags behind real-time.
+        capture.set(cv2.CAP_PROP_BUFFERSIZE, 1)
 
         if config.FRAME_WIDTH:
             capture.set(cv2.CAP_PROP_FRAME_WIDTH, config.FRAME_WIDTH)

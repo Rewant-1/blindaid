@@ -1,0 +1,18 @@
+PHASE 3 OCR BENCHMARK RESULTS
+Date: 2026-06-10 01:45:43
+Frames: 30
+
+RapidOCR ONNX:
+  Median: 221.1 ms
+  Mean:   205.9 ms (±50.9)
+  P95:    280.1 ms
+  P99:    282.4 ms
+  Memory: 64 MB
+  Avg texts/frame: 2.1
+
+Sample outputs:
+  Frame 1: ['Hello World']
+  Frame 2: ['Open 9am to 5pm', 'Caution Wet']
+  Frame 3: ['Restroom', 'Fire', 'Exit', 'Push to Open']
+  Frame 4: ['Do Not Ente']
+  Frame 5: ['Welcomeformation Des']

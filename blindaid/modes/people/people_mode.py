@@ -7,7 +7,6 @@ from pathlib import Path
 from typing import List, Optional, Set, Tuple
 
 import cv2
-import face_recognition
 import numpy as np
 from ultralytics import YOLO
 
@@ -27,25 +26,31 @@ class PeopleMode:
         self.known_face_encodings: List[np.ndarray] = []
         self.known_face_names: List[str] = []
         self._loaded = False
+        self._import_failed = False
 
         self.detected_people: Set[str] = set()
 
     def _ensure_loaded(self) -> None:
-        if self._loaded:
+        if self._loaded or self._import_failed:
             return
         import warnings
 
         warnings.filterwarnings("ignore", category=UserWarning)
         warnings.filterwarnings("ignore", category=FutureWarning)
         try:
+            import face_recognition  # noqa: F401
             self.face_detector = YOLO(str(config.FACE_RECOGNITION_MODEL), verbose=False)
             self._load_known_faces(config.KNOWN_FACES_DIR)
             self._loaded = True
             logger.info("Face datasets loaded (%d known)", len(self.known_face_encodings))
+        except ImportError as exc:
+            self._import_failed = True
+            logger.error("face-recognition/dlib not installed. People Mode is disabled. Run 'pip install face-recognition' to enable.")
         except Exception as exc:  # noqa: BLE001
             logger.error("Failed to load face models: %s", exc)
 
     def _load_known_faces(self, directory: Path) -> None:
+        import face_recognition
         path = Path(directory)
         if not path.is_dir():
             logger.warning("Known faces directory %s not found", path)
@@ -66,6 +71,7 @@ class PeopleMode:
                     continue
 
     def _recognize_face(self, encoding: np.ndarray) -> Tuple[str, float]:
+        import face_recognition
         if not self.known_face_encodings:
             return "Unknown", 0.0
         distances = face_recognition.face_distance(self.known_face_encodings, encoding)
@@ -117,12 +123,16 @@ class PeopleMode:
             self.finished = True
             return display_frame, *self._summarise()
 
+        if self._import_failed:
+            return display_frame, ["People Mode Disabled", "Missing face_recognition library"], []
+
         info_lines = ["Scanning for people..."]
         speech_messages: List[str] = []
 
         if self.face_detector is None:
             return display_frame, info_lines, speech_messages
 
+        import face_recognition
         h, w = frame.shape[:2]
         rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         results = self.face_detector(rgb_frame, verbose=False)
@@ -146,3 +156,4 @@ class PeopleMode:
             cv2.putText(display_frame, name, (left, max(0, top - 10)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
 
         return display_frame, info_lines, speech_messages
+

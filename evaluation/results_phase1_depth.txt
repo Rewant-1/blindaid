@@ -1,0 +1,13 @@
+PHASE 1 DEPTH BENCHMARK RESULTS
+Date: 2026-05-24 17:43:13
+Frames: 50
+
+ONNX MiDaS-Small:
+  Median: 23.7 ms
+  Mean:   23.9 ms (±1.4)
+  P95:    27.4 ms
+  P99:    28.5 ms
+  Memory: 147 MB
+
+PyTorch: [not tested — torch not installed]
+

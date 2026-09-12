@@ -1,0 +1,18 @@
+PHASE 7 FULL BENCHMARK SUMMARY
+Date: 2026-05-24 18:03:31
+Frames: 100
+
+=== AFP vs Baselines ===
+  Always-On: 0.0% skip, 2341ms total CPU
+  Static Skip (1/10): 90.0% skip, 236ms total CPU
+  Adaptive Frame Processing: 81.0% skip, 440ms total CPU
+
+=== Model Latencies ===
+  depth_midas_small: 22.8ms median
+  yolov8n: 30.0ms median
+  template_caption: 31.0ms median
+  rapidocr: 119.4ms median
+
+=== Full Pipeline ===
+  Median: 0.0ms per frame
+  Throughput: 1111112 FPS

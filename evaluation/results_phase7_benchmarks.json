@@ -1,0 +1,181 @@
+{
+  "afp_comparison": {
+    "always_on": {
+      "name": "Always-On",
+      "frames_processed": 100,
+      "frames_total": 100,
+      "skip_ratio": 0.0,
+      "median_ms": 23.237400000652997,
+      "total_cpu_ms": 2341.0116000195558
+    },
+    "static_skip": {
+      "name": "Static Skip (1/10)",
+      "frames_processed": 10,
+      "frames_total": 100,
+      "skip_ratio": 0.9,
+      "median_ms": 23.59604999946896,
+      "total_cpu_ms": 235.9658000023046
+    },
+    "afp": {
+      "name": "Adaptive Frame Processing",
+      "frames_processed": 19,
+      "frames_total": 100,
+      "skip_ratio": 0.81,
+      "median_ms": 23.075100001733517,
+      "total_cpu_ms": 439.9171000040951,
+      "avg_proximity": 0.6693676568959889,
+      "avg_stability": 0.7034315239704895
+    }
+  },
+  "model_breakdown": {
+    "depth_midas_small": {
+      "median_ms": 22.773000000597676,
+      "p95_ms": 24.058000002696645
+    },
+    "yolov8n": {
+      "median_ms": 29.954850000649458,
+      "p95_ms": 30.92610000021523
+    },
+    "template_caption": {
+      "median_ms": 30.95270000085293,
+      "p95_ms": 33.588100002816645
+    },
+    "rapidocr": {
+      "median_ms": 119.4239500000549,
+      "p95_ms": 164.8525000018708
+    }
+  },
+  "full_pipeline": {
+    "total_frames": 100,
+    "all_median_ms": 0.0008999995770864189,
+    "all_mean_ms": 11.250478999972984,
+    "all_p95_ms": 90.84140000049956,
+    "processed_frames": 13,
+    "processed_median_ms": 87.42550000170013,
+    "skipped_frames": 87,
+    "skipped_median_ms": 0.0008999995770864189,
+    "afp_skip_ratio": 0.8627450980392157
+  },
+  "afp_sensitivity": [
+    {
+      "proximity_threshold": 0.5,
+      "max_skip": 5,
+      "skip_ratio": 0.7,
+      "frames_processed": 30
+    },
+    {
+      "proximity_threshold": 0.5,
+      "max_skip": 10,
+      "skip_ratio": 0.74,
+      "frames_processed": 26
+    },
+    {
+      "proximity_threshold": 0.5,
+      "max_skip": 15,
+      "skip_ratio": 0.75,
+      "frames_processed": 25
+    },
+    {
+      "proximity_threshold": 0.5,
+      "max_skip": 20,
+      "skip_ratio": 0.78,
+      "frames_processed": 22
+    },
+    {
+      "proximity_threshold": 0.6,
+      "max_skip": 5,
+      "skip_ratio": 0.71,
+      "frames_processed": 29
+    },
+    {
+      "proximity_threshold": 0.6,
+      "max_skip": 10,
+      "skip_ratio": 0.74,
+      "frames_processed": 26
+    },
+    {
+      "proximity_threshold": 0.6,
+      "max_skip": 15,
+      "skip_ratio": 0.79,
+      "frames_processed": 21
+    },
+    {
+      "proximity_threshold": 0.6,
+      "max_skip": 20,
+      "skip_ratio": 0.78,
+      "frames_processed": 22
+    },
+    {
+      "proximity_threshold": 0.7,
+      "max_skip": 5,
+      "skip_ratio": 0.71,
+      "frames_processed": 29
+    },
+    {
+      "proximity_threshold": 0.7,
+      "max_skip": 10,
+      "skip_ratio": 0.78,
+      "frames_processed": 22
+    },
+    {
+      "proximity_threshold": 0.7,
+      "max_skip": 15,
+      "skip_ratio": 0.81,
+      "frames_processed": 19
+    },
+    {
+      "proximity_threshold": 0.7,
+      "max_skip": 20,
+      "skip_ratio": 0.82,
+      "frames_processed": 18
+    },
+    {
+      "proximity_threshold": 0.8,
+      "max_skip": 5,
+      "skip_ratio": 0.71,
+      "frames_processed": 29
+    },
+    {
+      "proximity_threshold": 0.8,
+      "max_skip": 10,
+      "skip_ratio": 0.8,
+      "frames_processed": 20
+    },
+    {
+      "proximity_threshold": 0.8,
+      "max_skip": 15,
+      "skip_ratio": 0.85,
+      "frames_processed": 15
+    },
+    {
+      "proximity_threshold": 0.8,
+      "max_skip": 20,
+      "skip_ratio": 0.88,
+      "frames_processed": 12
+    },
+    {
+      "proximity_threshold": 0.9,
+      "max_skip": 5,
+      "skip_ratio": 0.71,
+      "frames_processed": 29
+    },
+    {
+      "proximity_threshold": 0.9,
+      "max_skip": 10,
+      "skip_ratio": 0.8,
+      "frames_processed": 20
+    },
+    {
+      "proximity_threshold": 0.9,
+      "max_skip": 15,
+      "skip_ratio": 0.85,
+      "frames_processed": 15
+    },
+    {
+      "proximity_threshold": 0.9,
+      "max_skip": 20,
+      "skip_ratio": 0.88,
+      "frames_processed": 12
+    }
+  ]
+}

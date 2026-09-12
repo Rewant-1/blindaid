@@ -1,16 +1,19 @@
-"""OCR mode using PaddleOCR."""
+"""OCR mode using RapidOCR (ONNX-based, no PaddleOCR dependency).
+
+Research branch: Uses ONNX OCR + Adaptive Frame Processing.
+"""
 from __future__ import annotations
 
 import logging
-import os
 import time
-from contextlib import redirect_stderr, redirect_stdout
 from typing import List, Tuple
 
 import cv2
 import numpy as np
 
 from blindaid.core import config
+from blindaid.core.adaptive_processor import AdaptiveFrameProcessor
+from blindaid.core.ocr_onnx import OCREngineONNX
 
 logger = logging.getLogger(__name__)
 
@@ -21,133 +24,109 @@ class ReadingMode:
         self.language = language
         self.ocr = None
         self._ocr_failed = False
+        self.afp = AdaptiveFrameProcessor()
 
         self.frame_count = 0
-        self.skip = max(0, config.OCR_FRAME_SKIP)
         self.cooldown = config.OCR_COOLDOWN_SECONDS
         self.confidence_threshold = config.OCR_CONFIDENCE_THRESHOLD
         self.last_spoken = 0.0
         self.last_text = ""
         self.stable_text_count = 0
-        self.last_text_data: List[Tuple[str, float, np.ndarray]] = []
+        self._cached_display = None
+        self._cached_info = []
 
     def _ensure_ocr(self):
         if self.ocr is not None or self._ocr_failed:
             return self.ocr
 
         try:
-            import warnings
-            from paddleocr import PaddleOCR
-
-            os.environ.setdefault("FLAGS_allocator_strategy", "auto_growth")
-            os.environ.setdefault("GLOG_minloglevel", "2")
-            warnings.filterwarnings("ignore", category=Warning)
-
-            with open(os.devnull, "w", encoding="utf-8") as sink, redirect_stdout(sink), redirect_stderr(sink):
-                logger.info("Loading PaddleOCR (%s)", self.language)
-                # show_log=False is must, otherwise console fills up with junk
-                self.ocr = PaddleOCR(lang=self.language, use_angle_cls=True, 
-                                   text_det_limit_side_len=640, show_log=False)
-        except Exception as exc:  # noqa: BLE001
+            logger.info("Loading RapidOCR ONNX (%s)", self.language)
+            self.ocr = OCREngineONNX(language=self.language)
+        except Exception as exc:
             self._ocr_failed = True
-            logger.error("Failed to initialise PaddleOCR: %s", exc)
+            logger.error("Failed to initialise RapidOCR: %s", exc)
         return self.ocr
 
     def _run_ocr(self, frame: np.ndarray):
         engine = self._ensure_ocr()
         if engine is None:
-            return None
-        return engine.ocr(frame)
-
-    def _parse_result(self, result) -> List[Tuple[str, float, np.ndarray]]:
-        parsed: List[Tuple[str, float, np.ndarray]] = []
-        if not result:
-            return parsed
-
-        first = result[0]
-        if not first:
-            return parsed
-
-        if hasattr(first, "get"):
-            texts = first.get("rec_texts", [])
-            scores = first.get("rec_scores", [])
-            polys = first.get("rec_polys", first.get("dt_polys", []))
-            for idx, text in enumerate(texts):
-                if not text:
-                    continue
-                score = float(scores[idx]) if idx < len(scores) else 1.0
-                poly = polys[idx] if idx < len(polys) else None
-                if poly is None:
-                    continue
-                box = np.array(poly, dtype=np.int32)
-                parsed.append((str(text), score, box))
-        else:
-            for line in first:
-                if not isinstance(line, (list, tuple)) or len(line) < 2:
-                    continue
-                box, text_info = line[0], line[1]
-                try:
-                    box_array = np.array(box, dtype=np.int32)
-                except Exception:  # noqa: BLE001
-                    continue
-                if isinstance(text_info, (list, tuple)):
-                    text = text_info[0]
-                    score = float(text_info[1]) if len(text_info) > 1 else 1.0
-                else:
-                    text = str(text_info)
-                    score = 1.0
-                parsed.append((text, score, box_array))
-        return parsed
+            return []
+        return engine.read_text(frame)
 
     def process_frame(self, frame: np.ndarray) -> Tuple[np.ndarray, List[str], List[str]]:
         display = frame.copy()
-        info_lines: List[str] = []
+        info_lines: List[str] = ["Mode: Reading (ONNX)"]
         speech: List[str] = []
 
         self.frame_count += 1
-        should_run = (self.frame_count % (self.skip + 1)) == 0
+
+        # AFP decides whether to run OCR on this frame
+        should_run = self.afp.should_process("reading", frame)
+
         if should_run:
-            result = self._run_ocr(display)
-            parsed = self._parse_result(result)
-            self.last_text_data = parsed if parsed else []
-        elif not self.last_text_data and self._ocr_failed:
-            info_lines.append("OCR engine unavailable")
+            results = self._run_ocr(frame)
 
-        if self.last_text_data:
-            texts = [text for text, score, _ in self.last_text_data if text]
-            info_text = " ".join(texts)
-            if info_text:
-                info_lines.append(info_text)
-                now = time.time()
-                high_conf = [text for text, score, _ in self.last_text_data if score >= self.confidence_threshold]
-                if info_text == self.last_text:
-                    self.stable_text_count += 1
-                else:
-                    self.stable_text_count = 0
-                    self.last_text = info_text
+            if results:
+                texts = [r.text for r in results]
+                info_text = " ".join(texts)
 
-                if (
-                    self.audio_enabled
-                    and high_conf
-                    and self.stable_text_count >= 2
-                    and (now - self.last_spoken) > self.cooldown
-                ):
-                    speech_text = " ".join(high_conf)
-                    speech.append(speech_text)
-                    self.last_spoken = now
-        else:
-            if self._ocr_failed:
-                info_lines.append("OCR not available")
+                if info_text:
+                    info_lines.append(info_text)
+
+                    now = time.time()
+                    high_conf = [r.text for r in results if r.confidence >= self.confidence_threshold]
+
+                    if info_text == self.last_text:
+                        self.stable_text_count += 1
+                    else:
+                        self.stable_text_count = 0
+                        self.last_text = info_text
+
+                    if (
+                        self.audio_enabled
+                        and high_conf
+                        and self.stable_text_count >= 2
+                        and (now - self.last_spoken) > self.cooldown
+                    ):
+                        speech_text = " ".join(high_conf)
+                        speech.append(speech_text)
+                        self.last_spoken = now
+
+                    # Draw bounding boxes
+                    for r in results:
+                        if r.bbox and len(r.bbox) >= 4:
+                            pts = np.array(r.bbox, dtype=np.int32)
+                            cv2.polylines(display, [pts], True, (0, 255, 0), 2)
+                            cv2.putText(display, f"{r.text} ({r.confidence:.0%})",
+                                        (int(pts[0][0]), int(pts[0][1]) - 5),
+                                        cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 255, 0), 1)
             else:
                 info_lines.append("No text detected")
+
+            # AFP stats
+            metrics = self.afp.get_metrics("reading")
+            skip_pct = metrics.get("cpu_savings_pct", 0)
+            h = frame.shape[0]
+            cv2.putText(display, f"AFP: {skip_pct:.0f}% saved",
+                        (10, h - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 255, 0), 1)
+
+            self._cached_display = display
+            self._cached_info = info_lines
+        else:
+            # Return cached during skip
+            if self._cached_display is not None:
+                return self._cached_display, self._cached_info, []
+            info_lines.append("Warming up...")
 
         return display, info_lines, speech
 
     def on_enter(self):
         self.frame_count = 0
         self.last_text = ""
-        self.last_text_data = []
         self.stable_text_count = 0
+        logger.info("Reading Mode Active (ONNX + AFP)")
 
     def on_exit(self):
-        return
+        if self.afp:
+            metrics = self.afp.get_metrics("reading")
+            logger.info("Reading AFP metrics: %s", metrics)
